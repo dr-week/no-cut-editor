@@ -38,6 +38,16 @@ export interface TrackClip {
   color: string;
 }
 
+export interface MediaAsset {
+  id: string;
+  name: string;
+  type: "video" | "audio" | "image" | "other";
+  fileType: string;
+  size: number;
+  url: string | null;
+  createdAt: number;
+}
+
 export interface LowLiteAiEngine {
   mode: "local_webnn" | "local_wasm" | "local_webgpu";
   modelName: "Whisper-Tiny-INT8" | "SAM-Mobile-Quantized" | "Silero-VAD-Lite";

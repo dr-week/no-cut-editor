@@ -118,3 +118,73 @@ export function downloadBlob(blob: Blob, filename: string): void {
   a.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
+
+export interface SocialExportPreset {
+  id: string;
+  name: string;
+  platform: "YouTube" | "TikTok" | "Instagram" | "Twitter" | "Custom";
+  format: ExportFormat;
+  width: number;
+  height: number;
+  fps: number;
+  quality: ExportQuality;
+  aspectRatio: "16:9" | "9:16" | "1:1" | "4:5";
+}
+
+export const SOCIAL_EXPORT_PRESETS: SocialExportPreset[] = [
+  {
+    id: "yt-shorts-4k",
+    name: "YouTube Shorts / TikTok (1080x1920 60fps)",
+    platform: "TikTok",
+    format: "mp4",
+    width: 1080,
+    height: 1920,
+    fps: 60,
+    quality: "high",
+    aspectRatio: "9:16"
+  },
+  {
+    id: "yt-widescreen-1080p",
+    name: "YouTube 1080p Standard (1920x1080 30fps)",
+    platform: "YouTube",
+    format: "mp4",
+    width: 1920,
+    height: 1080,
+    fps: 30,
+    quality: "high",
+    aspectRatio: "16:9"
+  },
+  {
+    id: "ig-square-feed",
+    name: "Instagram Square Post (1080x1080 30fps)",
+    platform: "Instagram",
+    format: "mp4",
+    width: 1080,
+    height: 1080,
+    fps: 30,
+    quality: "medium",
+    aspectRatio: "1:1"
+  },
+  {
+    id: "ig-portrait-feed",
+    name: "Instagram Portrait 4:5 (1080x1350 30fps)",
+    platform: "Instagram",
+    format: "mp4",
+    width: 1080,
+    height: 1350,
+    fps: 30,
+    quality: "medium",
+    aspectRatio: "4:5"
+  }
+];
+
+export function getSocialPreset(id: string): SocialExportPreset | undefined {
+  return SOCIAL_EXPORT_PRESETS.find((p) => p.id === id);
+}
+
+export function calculateExportProgress(elapsedMs: number, totalDurationMs: number): number {
+  if (totalDurationMs <= 0) return 0;
+  const ratio = Math.min(1, Math.max(0, elapsedMs / totalDurationMs));
+  return Number((ratio * 100).toFixed(1));
+}
+

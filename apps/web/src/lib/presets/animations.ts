@@ -728,6 +728,33 @@ export const ANIMATION_PRESETS: AnimationDescriptor[] = [
     { time: 0, values: { scaleX: 1, scaleY: 1, opacity: 1 } },
     { time: 0.4, values: { scaleX: 1.35, scaleY: 1.35, opacity: 1 } },
     { time: 1, values: { scaleX: 1.18, scaleY: 1.18, opacity: 1 } }
+  ]),
+  // ---- WAVE 5 (Ultra Kinetic & Cinematic) ----
+  anim("preset_hyper_warp_punch", "Hyper Warp Punch", "camera_3d", "3D Parallax", "spring", 0.45, "from-violet-500 to-fuchsia-600", [
+    { time: 0, values: { scaleX: 0.7, scaleY: 0.7, opacity: 0, rotation: -8 } },
+    { time: 0.6, values: { scaleX: 1.2, scaleY: 1.2, opacity: 1, rotation: 3 } },
+    { time: 1, values: { scaleX: 1, scaleY: 1, opacity: 1, rotation: 0 } }
+  ]),
+  anim("preset_glitch_chroma_shift", "Glitch Chroma Shift", "motion_graphics", "Liquid Distortion", "steps", 0.35, "from-cyan-400 to-rose-500", [
+    { time: 0, values: { x: -12, opacity: 0.6, skewX: 10 } },
+    { time: 0.3, values: { x: 15, opacity: 1, skewX: -8 } },
+    { time: 0.7, values: { x: -4, opacity: 0.9, skewX: 3 } },
+    { time: 1, values: { x: 0, opacity: 1, skewX: 0 } }
+  ]),
+  anim("preset_magnetic_snap_title", "Magnetic Snap Title", "text", "Kinetic Typography", "spring", 0.5, "from-amber-400 to-emerald-500", [
+    { time: 0, values: { y: 50, scaleX: 0.5, scaleY: 1.5, opacity: 0 } },
+    { time: 0.55, values: { y: -8, scaleX: 1.1, scaleY: 0.9, opacity: 1 } },
+    { time: 1, values: { y: 0, scaleX: 1, scaleY: 1, opacity: 1 } }
+  ]),
+  anim("preset_smooth_cinematic_glide", "Smooth Cinematic Glide", "video", "3D Parallax", "easeInOutQuart", 1.2, "from-blue-600 to-indigo-800", [
+    { time: 0, values: { scaleX: 1.15, scaleY: 1.15, opacity: 0, x: -30 } },
+    { time: 0.5, values: { scaleX: 1.05, scaleY: 1.05, opacity: 1, x: 0 } },
+    { time: 1, values: { scaleX: 1, scaleY: 1, opacity: 1, x: 0 } }
+  ]),
+  anim("preset_cyber_scanline_reveal", "Cyber Scanline Reveal", "motion_graphics", "Morphing SVG", "easeOutCubic", 0.6, "from-teal-400 to-cyan-500", [
+    { time: 0, values: { scaleY: 0.05, opacity: 0 } },
+    { time: 0.4, values: { scaleY: 1.1, opacity: 0.8 } },
+    { time: 1, values: { scaleY: 1, opacity: 1 } }
   ])
 ];
 

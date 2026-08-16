@@ -28,6 +28,19 @@ describe("OpenCut Comprehensive Editor & Engine Test Suite", () => {
     expect(state.selectedClipId).toBeNull();
   });
 
+  it("imports media files and folders into the asset library and timeline", () => {
+    const fileA = new File(["video"], "clip1.mp4", { type: "video/mp4" });
+    const fileB = new File(["audio"], "music.mp3", { type: "audio/mpeg" });
+
+    useEditorStore.getState().importMediaFiles([fileA, fileB]);
+
+    const state = useEditorStore.getState();
+    expect(state.mediaAssets.some((asset) => asset.name === "clip1.mp4")).toBe(true);
+    expect(state.mediaAssets.some((asset) => asset.name === "music.mp3")).toBe(true);
+    expect(state.clips.some((clip) => clip.title === "clip1.mp4")).toBe(true);
+    expect(state.clips.some((clip) => clip.title === "music.mp3")).toBe(true);
+  });
+
   it("updates current playhead time", () => {
     useEditorStore.getState().setCurrentTime(14.5);
     expect(useEditorStore.getState().currentTime).toBe(14.5);
@@ -337,9 +350,9 @@ describe("OpenCut Comprehensive Editor & Engine Test Suite", () => {
     expect(useEditorStore.getState().runAutoEdit()).toBeNull();
   });
 
-  it("contains 136 animation presets, 54 templates, 63 effects, 38 transitions, 12 LUTs, 14 trends", () => {
+  it("contains 141 animation presets, 54 templates, 63 effects, 38 transitions, 12 LUTs, 14 trends", () => {
     const state = useEditorStore.getState();
-    expect(state.availableAnimations.length).toBe(136);
+    expect(state.availableAnimations.length).toBe(141);
     expect(state.availableTemplates.length).toBe(54);
     expect(state.availableEffects.length).toBe(63);
     expect(state.availableTransitions.length).toBe(38);
@@ -376,7 +389,7 @@ describe("OpenCut Comprehensive Editor & Engine Test Suite", () => {
     expect(useEditorStore.getState().minimalMode).toBe(false);
   });
 
-  it("supports command search for focus and export actions", () => {
+  it("supports command search for focus and export actions", async () => {
     const { searchEditorCommands } = await import("./../search/editorCommandRegistry");
     const focusMatches = searchEditorCommands("focus");
     const exportMatches = searchEditorCommands("export video");

@@ -3,8 +3,8 @@ import {
   Play, Pause, SkipBack, SkipForward, Volume2,
   Layers, Type, Image as ImageIcon, Sparkles, Sliders,
   Scissors, Download, Wand2, Plus, Keyboard,
-  Zap, MousePointer, Activity, Palette, Aperture, Mic, Music,
-  Undo2, Redo2, Copy, Trash2, Repeat, Gauge, BoxSelect,
+  Zap, Activity, Palette, Aperture, Mic, Music,
+  Undo2, Redo2, Trash2, Repeat, Gauge, BoxSelect,
   Clapperboard, ChartLine, Magnet, Save, Focus, Maximize2
 } from "lucide-react";
 import { Stage, Layer, Rect, Text as KonvaText, Ellipse, Star, Group, Arrow, Line } from "react-konva";
@@ -13,7 +13,7 @@ import { sampleAnimation, sampleKeyframeEditorTrack, formatTimecode } from "#/li
 import { getAnimationPreset } from "#/lib/presets/animations";
 import { LUT_PRESETS } from "#/lib/presets/luts";
 import type { SceneShape, KeyframeProperty } from "#/lib/store/editorTypes";
-import { estimateFileSizeKb, resolveBitrate, buildExportFilename, exportCanvas, downloadBlob, type ExportOptions } from "#/lib/export/exportEngine";
+import { estimateFileSizeKb, resolveBitrate, buildExportFilename, exportCanvas, downloadBlob, SOCIAL_EXPORT_PRESETS, type ExportOptions } from "#/lib/export/exportEngine";
 import {
   Command,
   CommandDialog,
@@ -25,6 +25,11 @@ import {
   CommandShortcut,
 } from "#/components/ui/command";
 import { searchEditorCommands } from "#/lib/search/editorCommandRegistry";
+import { searchPresetCatalog } from "#/lib/presets/editorPresetCatalog";
+import { searchEditorShortcuts } from "#/lib/shortcuts/editorShortcuts";
+import { EffectsPanel } from "./editor/EffectsPanel";
+import { ShortcutHelpPanel } from "./editor/ShortcutHelpPanel";
+import { TimelineToolbar, TimelineTrackRow } from "./timeline/TimelineControls";
 
 const KEYFRAME_PROPERTIES: KeyframeProperty[] = ["scaleX", "scaleY", "x", "y", "opacity", "rotation"];
 const KEYFRAME_LABELS: Record<string, string> = {
@@ -177,15 +182,10 @@ export function NocutEditor() {
   const [compressionPreset, setCompressionPreset] = useState("balanced");
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [commandSearch, setCommandSearch] = useState("");
+  const [shortcutSearch, setShortcutSearch] = useState("");
+  const mediaInputRef = useRef<HTMLInputElement | null>(null);
 
-  const animCategories = ["all", ...Array.from(new Set(availableAnimations.map((a) => a.category)))];
-  const filteredAnimations = availableAnimations.filter((a) =>
-    (animCat === "all" || a.category === animCat) &&
-    (a.name + a.id + a.technique).toLowerCase().includes(animSearch.toLowerCase())
-  );
-  const filteredEffects = availableEffects.filter((fx) =>
-    (fx.name + fx.id).toLowerCase().includes(fxSearch.toLowerCase())
-  );
+  const shortcutResults = searchEditorShortcuts(shortcutSearch);
   const stageRef = useRef<any>(null);
 
   useEffect(() => {
@@ -351,8 +351,13 @@ export function NocutEditor() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [togglePlay, undo, redo, duplicateClip, deleteClip, rippleDelete, splitClip, nudgeClip, setCurrentTime, triggerNotice, currentTime, duration, isPlaying, toggleSnap, seekBy]);
 
-  const tabs = Object.keys(TAB_ICONS);
   const commandResults = searchEditorCommands(commandSearch);
+  const presetResults = commandSearch ? searchPresetCatalog(commandSearch).slice(0, 6) : [];
+
+  const handleMediaFiles = (fileList: FileList | null | undefined) => {
+    if (!fileList || fileList.length === 0) return;
+    state.importMediaFiles(Array.from(fileList));
+  };
 
   return (
     <>
@@ -393,6 +398,37 @@ export function NocutEditor() {
               </CommandItem>
             ))}
           </CommandGroup>
+
+          {presetResults.length > 0 && (
+            <CommandGroup heading="Preset Suggestions">
+              {presetResults.map((preset) => (
+                <CommandItem
+                  key={preset.id}
+                  value={`${preset.label} ${preset.category} ${preset.keywords}`}
+                  onSelect={() => {
+                    setCommandPaletteOpen(false);
+                    setCommandSearch("");
+                    triggerNotice(`Preset ready: ${preset.label}`);
+
+                    if (preset.kind === "lut") {
+                      setActiveTab("color");
+                    } else if (preset.kind === "transition") {
+                      setActiveTab("transitions");
+                    } else if (preset.kind === "effect") {
+                      setActiveTab("effects");
+                    } else if (preset.kind === "template") {
+                      setActiveTab("templates");
+                    } else {
+                      setActiveTab("effects");
+                    }
+                  }}
+                >
+                  <span className="font-medium">{preset.label}</span>
+                  <span className="text-[10px] uppercase tracking-[0.18em] text-neutral-500">{preset.kind}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
         </CommandList>
       </Command>
     </CommandDialog>
@@ -493,6 +529,16 @@ export function NocutEditor() {
             <Keyboard className="w-3.5 h-3.5 text-cyan-400" />
             Search
           </button>
+          <a
+            href="https://discord.gg/g8RA4A4V3"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-1.5 bg-[#5865F2]/20 hover:bg-[#5865F2]/40 text-[#5865F2] hover:text-white text-xs px-2.5 py-1.5 rounded-md transition border border-[#5865F2]/30"
+            title="Join the OpenCut Community Discord"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Discord</span>
+          </a>
           <button
             onClick={() => setActiveTab("shortcuts")}
             className="flex items-center gap-1.5 bg-neutral-800/80 hover:bg-neutral-700 text-xs px-3 py-1.5 rounded-md transition text-neutral-300 border border-neutral-700/50"
@@ -574,14 +620,41 @@ export function NocutEditor() {
           {activeTab === "media" && (
             <div className="flex flex-col gap-3">
               <h3 className="text-xs font-bold text-neutral-300 uppercase tracking-wider">Media Assets</h3>
+
+              <input
+                ref={mediaInputRef}
+                type="file"
+                multiple
+                accept="video/*,audio/*,image/*"
+                {...({ webkitdirectory: "", directory: "" } as React.InputHTMLAttributes<HTMLInputElement>)}
+                className="hidden"
+                onChange={(event) => handleMediaFiles(event.target.files)}
+              />
+
               <div
-                onClick={() => triggerNotice("Import Media: WebCodecs fast indexing")}
+                onClick={() => mediaInputRef.current?.click()}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  handleMediaFiles(event.dataTransfer?.files);
+                }}
                 className="border border-dashed border-neutral-700 hover:border-cyan-500/60 rounded-lg p-5 flex flex-col items-center justify-center text-center cursor-pointer transition bg-neutral-900/40 hover:bg-neutral-900/80"
               >
                 <Plus className="w-5 h-5 text-cyan-400 mb-1" />
                 <span className="text-xs text-neutral-300 font-medium">Drag & Drop 4K MP4 / WebM</span>
-                <span className="text-[10px] text-neutral-500 mt-1">GPU Mediabunny Fast Decoder</span>
+                <span className="text-[10px] text-neutral-500 mt-1">Click to import files or folders</span>
               </div>
+
+              {state.mediaAssets.length > 0 && (
+                <div className="flex flex-col gap-1.5">
+                  {state.mediaAssets.slice(-6).map((asset) => (
+                    <div key={asset.id} className="flex items-center justify-between rounded-md border border-neutral-800 bg-neutral-900/80 px-2 py-1.5">
+                      <span className="text-[10px] text-neutral-300 truncate max-w-[160px]">{asset.name}</span>
+                      <span className="text-[9px] uppercase text-cyan-400">{asset.type}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -754,95 +827,21 @@ export function NocutEditor() {
           )}
 
           {activeTab === "effects" && (
-            <div className="flex flex-col gap-2.5">
-              <h3 className="text-xs font-bold text-neutral-300 uppercase tracking-wider mb-1">Motion Graphics & Effects</h3>
-
-              <div className="bg-neutral-900/90 border border-cyan-500/30 rounded-lg p-2.5 flex flex-col gap-2">
-                <span className="text-[10px] font-bold text-cyan-300 flex items-center gap-1">
-                  <Zap className="w-3 h-3 text-cyan-400" /> Motion Graphics ({filteredAnimations.length} of {availableAnimations.length})
-                </span>
-                <div className="flex flex-wrap gap-1">
-                  {animCategories.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setAnimCat(cat)}
-                      className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border transition ${
-                        animCat === cat
-                          ? "bg-cyan-500/20 border-cyan-400 text-cyan-200"
-                          : "bg-neutral-800 border-neutral-700 text-neutral-400 hover:text-neutral-200"
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-                <input
-                  type="text"
-                  placeholder={`Search ${availableAnimations.length} animations (pop, glitch, ken burns...)`}
-                  value={animSearch}
-                  onChange={(e) => setAnimSearch(e.target.value)}
-                  className="bg-black/60 border border-neutral-700 rounded px-2 py-1 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-cyan-400"
-                />
-                <div className="grid grid-cols-2 gap-1.5 max-h-44 overflow-y-auto">
-                  {filteredAnimations.slice(0, 60).map((a) => (
-                    <button
-                      key={a.id}
-                      onClick={() => applyAnimationToClip(selectedClipId ?? "v1", a.id)}
-                      title={`${a.technique} · ${a.easing} · ${a.duration}s`}
-                      className={`text-left p-2 rounded border text-[10px] transition ${
-                        selectedAnimationPreset === a.id
-                          ? "bg-cyan-950/60 border-cyan-400 text-cyan-200"
-                          : "bg-neutral-900/70 border-neutral-800 hover:border-neutral-700 text-neutral-300"
-                      }`}
-                    >
-                      <span className="block font-semibold truncate">{a.name}</span>
-                      <span className="block text-[8px] text-neutral-500 uppercase truncate">{a.technique}</span>
-                    </button>
-                  ))}
-                  {filteredAnimations.length === 0 && (
-                    <span className="col-span-2 text-[10px] text-neutral-500">No animations match "{animSearch}"</span>
-                  )}
-                </div>
-              </div>
-
-              <span className="text-[10px] font-bold text-cyan-300 flex items-center gap-1">
-                <Palette className="w-3 h-3" /> Filmora Shaders, LUTs & Audio FX ({availableEffects.length})
-              </span>
-              <input
-                type="text"
-                placeholder={`Search ${availableEffects.length} effects (glitch, vignette, reverb...)`}
-                value={fxSearch}
-                onChange={(e) => setFxSearch(e.target.value)}
-                className="bg-black/60 border border-neutral-700 rounded px-2 py-1 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-cyan-400"
-              />
-              {(["lut", "glsl", "filter", "audio"] as const).map((group) => (
-                <div key={group} className="flex flex-col gap-1.5">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-500">{group.toUpperCase()}</span>
-                  <div className="grid grid-cols-2 gap-2">
-                    {filteredEffects.filter((fx) => fx.type === group).map((fx) => (
-                      <div
-                        key={fx.id}
-                        onClick={() => applyEffect(fx.id)}
-                        className={`p-2.5 rounded-lg border cursor-pointer text-xs flex flex-col gap-1 transition ${
-                          selectedEffect === fx.id
-                            ? "bg-cyan-950/60 border-cyan-400 text-cyan-200"
-                            : "bg-neutral-900/70 border-neutral-800 hover:border-neutral-700 text-neutral-300"
-                        }`}
-                      >
-                        <div className="flex items-center gap-1.5 font-semibold text-[11px]">
-                          <Palette className="w-3 h-3 text-cyan-400" />
-                          <span className="truncate">{fx.name}</span>
-                        </div>
-                        <span className="text-[9px] text-neutral-500 uppercase">{fx.type} filter</span>
-                      </div>
-                    ))}
-                  </div>
-                  {filteredEffects.filter((fx) => fx.type === group).length === 0 && fxSearch && (
-                    <span className="text-[10px] text-neutral-600">No {group} matches</span>
-                  )}
-                </div>
-              ))}
-            </div>
+            <EffectsPanel
+              availableAnimations={availableAnimations}
+              availableEffects={availableEffects}
+              selectedAnimationPreset={selectedAnimationPreset}
+              selectedEffect={selectedEffect}
+              selectedClipId={selectedClipId}
+              animSearch={animSearch}
+              fxSearch={fxSearch}
+              animCat={animCat}
+              onAnimSearchChange={setAnimSearch}
+              onFxSearchChange={setFxSearch}
+              onAnimCatChange={setAnimCat}
+              onApplyAnimationToClip={applyAnimationToClip}
+              onApplyEffect={applyEffect}
+            />
           )}
 
           {activeTab === "color" && (
@@ -1157,6 +1156,32 @@ export function NocutEditor() {
 
               <div className="flex flex-col gap-2 bg-neutral-900/70 p-3 rounded-lg border border-neutral-800">
                 <div className="flex justify-between items-center text-xs text-neutral-300">
+                  <span>Platform Preset</span>
+                  <select
+                    onChange={(e) => {
+                      const preset = SOCIAL_EXPORT_PRESETS.find((p) => p.id === e.target.value);
+                      if (preset) {
+                        setExportOpts({
+                          format: preset.format,
+                          width: preset.width,
+                          height: preset.height,
+                          fps: preset.fps,
+                          quality: preset.quality,
+                          durationMs: duration * 1000
+                        });
+                        triggerNotice(`Applied ${preset.name}`);
+                      }
+                    }}
+                    defaultValue=""
+                    className="bg-black/60 border border-neutral-700 rounded px-2 py-0.5 text-xs text-cyan-300 focus:outline-none"
+                  >
+                    <option value="" disabled>Select Target Platform</option>
+                    {SOCIAL_EXPORT_PRESETS.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex justify-between items-center text-xs text-neutral-300">
                   <span>Format</span>
                   <select
                     value={exportOpts.format}
@@ -1367,35 +1392,11 @@ export function NocutEditor() {
           )}
 
           {activeTab === "shortcuts" && (
-            <div>
-              <h3 className="text-xs font-bold text-cyan-400 uppercase tracking-wider mb-2">Premiere Pro Keybinds</h3>
-              <div className="flex flex-col gap-1.5 text-xs text-neutral-300">
-                {[
-                  ["Space", "Play / Pause"],
-                  ["J", "Shuttle Back (−2s)"],
-                  ["K", "Shuttle Stop"],
-                  ["L", "Shuttle Forward"],
-                  ["C / S", "Razor Split Tool"],
-                  ["V", "Selection Tool"],
-                  ["N", "Toggle Magnetic Snap"],
-                  ["Shift + Del", "Ripple Delete"],
-                  ["Del / Backspace", "Delete Clip"],
-                  ["Ctrl + D", "Duplicate Clip"],
-                  ["Ctrl + Z", "Undo"],
-                  ["Ctrl + Shift + Z", "Redo"],
-                  ["Home", "Go to Start"],
-                  ["End", "Go to End"],
-                  ["← / →", "Nudge Playhead ±0.5s"],
-                  ["Shift + ← / →", "Nudge Clip ±0.1s"],
-                  ["I / O", "Mark In / Out"]
-                ].map(([key, label]) => (
-                  <div key={key} className="flex justify-between bg-neutral-900/80 p-2 rounded border border-neutral-800">
-                    <span className="font-mono text-amber-400 font-bold">{key}</span>
-                    <span>{label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <ShortcutHelpPanel
+              shortcutSearch={shortcutSearch}
+              onShortcutSearchChange={setShortcutSearch}
+              shortcutResults={shortcutResults}
+            />
           )}
         </div>
         )}
@@ -1496,37 +1497,17 @@ export function NocutEditor() {
 
       <div className="h-56 border-t border-neutral-800/80 bg-[#0f1014] flex flex-col">
         <div className="h-8 border-b border-neutral-800/80 px-3 flex items-center justify-between text-[11px] text-neutral-400">
-          {!state.minimalMode && (
-          <div className="flex items-center gap-3">
-            <button onClick={splitClip} className="flex items-center gap-1 hover:text-cyan-400 transition font-medium">
-              <Scissors className="w-3.5 h-3.5 text-cyan-400" /> Split (C)
-            </button>
-            <button onClick={() => triggerNotice("Selection Tool Active (V)")} className="flex items-center gap-1 hover:text-amber-400 transition font-medium">
-              <MousePointer className="w-3.5 h-3.5 text-amber-400" /> Select (V)
-            </button>
-            <button onClick={duplicateClip} className="flex items-center gap-1 hover:text-purple-400 transition font-medium">
-              <Copy className="w-3.5 h-3.5 text-purple-400" /> Duplicate (Ctrl+D)
-            </button>
-            <button onClick={deleteClip} className="flex items-center gap-1 hover:text-red-400 transition font-medium">
-              <Trash2 className="w-3.5 h-3.5 text-red-400" /> Delete (Del)
-            </button>
-            <button onClick={rippleDelete} className="flex items-center gap-1 hover:text-orange-400 transition font-medium">
-              <Scissors className="w-3.5 h-3.5 text-orange-400" /> Ripple (Shift+Del)
-            </button>
-            <button onClick={() => applyAnimationToClip(selectedClipId ?? "v1", selectedAnimationPreset ?? "preset_pop_in")} className="flex items-center gap-1 hover:text-cyan-400 transition font-medium">
-              <Sparkles className="w-3.5 h-3.5 text-cyan-400" /> Apply Preset
-            </button>
-          </div>
-          )}
-          {state.minimalMode && (
-          <div className="flex items-center gap-2 text-[10px] text-neutral-500">
-            <span>Press <kbd className="font-mono text-neutral-400">V</kbd> Select</span>
-            <span>·</span>
-            <span><kbd className="font-mono text-neutral-400">C</kbd> Split</span>
-            <span>·</span>
-            <span><kbd className="font-mono text-neutral-400">Del</kbd> Delete</span>
-          </div>
-          )}
+          <TimelineToolbar
+            minimalMode={state.minimalMode}
+            selectedClipId={selectedClipId}
+            selectedAnimationPreset={selectedAnimationPreset}
+            onSplit={splitClip}
+            onDuplicate={duplicateClip}
+            onDelete={deleteClip}
+            onRippleDelete={rippleDelete}
+            onApplyAnimation={applyAnimationToClip}
+            onSelectTool={() => triggerNotice("Selection Tool Active (V)")}
+          />
           <span className="text-[10px] text-neutral-500 font-mono">WebCodecs Timeline Engine</span>
         </div>
 
@@ -1545,32 +1526,15 @@ export function NocutEditor() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-1.5 bg-[#07080a]">
-          {clips.map((clip) => {
-            const animId = state.clipAnimations[clip.id];
-            const animName = getAnimationPreset(animId)?.name;
-            return (
-              <div
-                key={clip.id}
-                onClick={() => setSelectedClipId(clip.id)}
-                className={`flex items-center gap-2 h-10 bg-neutral-900/80 rounded border px-2.5 cursor-pointer transition ${
-                  selectedClipId === clip.id ? "border-cyan-400 ring-1 ring-cyan-400/30" : "border-neutral-800 hover:border-neutral-700"
-                }`}
-              >
-                <span className="text-[10px] font-mono text-cyan-400 font-bold w-8">{clip.trackId}</span>
-                <div className={`flex-1 h-7 rounded flex items-center px-2 text-[11px] font-medium ${clip.color}`}>
-                  <span className="truncate">{clip.title}</span>
-                  {animName && (
-                    <span className="ml-2 text-[8px] px-1 py-0.5 rounded bg-black/40 border border-white/10 text-cyan-300 font-mono whitespace-nowrap">
-                      ✦ {animName}
-                    </span>
-                  )}
-                </div>
-                <span className="text-[9px] font-mono text-neutral-500 whitespace-nowrap">
-                  {clip.startTime}s → {clip.startTime + clip.duration}s
-                </span>
-              </div>
-            );
-          })}
+          {clips.map((clip) => (
+            <TimelineTrackRow
+              key={clip.id}
+              clip={clip}
+              isSelected={selectedClipId === clip.id}
+              animName={getAnimationPreset(state.clipAnimations[clip.id])?.name}
+              onSelect={setSelectedClipId}
+            />
+          ))}
         </div>
       </div>
     </div>

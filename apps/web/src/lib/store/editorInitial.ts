@@ -60,6 +60,7 @@ export function createInitialData() {
       noiseReductionDb: 24,
       eqBands: [0, 2, 4, 1, 0, -1, 3]
     },
+    mediaAssets: [] as { id: string; name: string; type: "video" | "audio" | "image" | "other"; fileType: string; size: number; url: string | null; createdAt: number }[],
     availableTrends: TREND_PRESETS,
     availableTemplates: VIDEO_TEMPLATES,
     availableAnimations: ANIMATION_PRESETS,

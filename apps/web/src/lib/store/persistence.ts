@@ -124,3 +124,26 @@ export async function listProjects(): Promise<PersistedProject[]> {
   const db = await dbPromise_;
   return db.table(STORE_NAME).toArray();
 }
+
+/**
+ * Creates a versioned project history snapshot for undo/recovery.
+ */
+export async function createProjectSnapshot(
+  data: SerializedProject,
+  label = "autosave"
+): Promise<string> {
+  const snapshotKey = `snapshot_${Date.now()}_${label}`;
+  await saveProject(data, snapshotKey);
+  return snapshotKey;
+}
+
+/**
+ * Retrieves all saved project snapshots sorted newest first.
+ */
+export async function getProjectSnapshots(): Promise<PersistedProject[]> {
+  const all = await listProjects();
+  return all
+    .filter((p) => p.key.startsWith("snapshot_"))
+    .sort((a, b) => b.updatedAt - a.updatedAt);
+}
+

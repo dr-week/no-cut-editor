@@ -5,7 +5,8 @@ import { getTransition } from "#/lib/presets/transitions";
 import { getTrendPreset } from "#/lib/presets/trends";
 import type { ClipKeyframeTrack, KeyframeEditorState, KeyframeProperty, AutoEditMode, AutoEditStats } from "./editorTypes";
 import { serializeProjectData, applyProjectData, saveProject, loadProject, clearProject } from "./persistence";
-import type { ColorGradingSettings, EditorSnapshot, SceneShapeKind, TrackClip, EnginePerformanceMetrics } from "./editorTypes";
+import type { ColorGradingSettings, EditorSnapshot, SceneShapeKind, TrackClip, EnginePerformanceMetrics, MediaAsset } from "./editorTypes";
+import { snapPosition, rippleShift, DEFAULT_SNAP_OPTIONS } from "#/lib/timeline/timelineSnap";
 
 export interface EditorActions {
   togglePlay: () => void;
@@ -21,6 +22,7 @@ export interface EditorActions {
   splitClip: () => void;
   duplicateClip: () => void;
   nudgeClip: (seconds: number) => void;
+  moveClipTo: (clipId: string, rawSeconds: number) => void;
   rippleDelete: () => void;
   deleteClip: () => void;
   undo: () => void;
@@ -43,6 +45,7 @@ export interface EditorActions {
   autoImprove: () => void;
   directorStoryboard: (format?: "9:16" | "16:9") => AutoEditStats | null;
   setRenderBackend: (backend: string) => void;
+  importMediaFiles: (files: File[]) => void;
   updateColorGrading: (key: keyof ColorGradingSettings, value: any) => void;
   resetColorGrading: () => void;
   applyLut: (lutName: string) => void;
@@ -98,6 +101,7 @@ export interface EditorData {
   availableTrends: any[];
   availableTransitions: any[];
   availableLuts: any[];
+  mediaAssets: MediaAsset[];
   clipAnimations: Record<string, string>;
   minimalMode: boolean;
   loopPlayback: boolean;
@@ -217,11 +221,33 @@ export const editorActions: (set: any, get: () => EditorState) => EditorActions 
     },
 
     nudgeClip: (seconds) => {
-      const { selectedClipId } = get();
+      const { selectedClipId, snapEnabled, duration } = get();
       if (!selectedClipId) return;
       const prev = snapshotOf(get());
       set((state: EditorState) => ({
-        clips: state.clips.map((c) => (c.id === selectedClipId ? { ...c, startTime: Math.max(0, c.startTime + seconds) } : c))
+        clips: state.clips.map((c) => {
+          if (c.id !== selectedClipId) return c;
+          const raw = Math.max(0, c.startTime + seconds);
+          const resolved = snapEnabled
+            ? snapPosition(raw, state.clips.filter((x) => x.id !== selectedClipId), duration, DEFAULT_SNAP_OPTIONS).snapped
+            : raw;
+          return { ...c, startTime: resolved };
+        })
+      }));
+      pushUndo(prev);
+    },
+
+    moveClipTo: (clipId, rawSeconds) => {
+      const { snapEnabled, duration } = get();
+      const prev = snapshotOf(get());
+      set((state: EditorState) => ({
+        clips: state.clips.map((c) => {
+          if (c.id !== clipId) return c;
+          const resolved = snapEnabled
+            ? snapPosition(Math.max(0, rawSeconds), state.clips.filter((x) => x.id !== clipId), duration, DEFAULT_SNAP_OPTIONS).snapped
+            : Math.max(0, rawSeconds);
+          return { ...c, startTime: resolved };
+        })
       }));
       pushUndo(prev);
     },
@@ -230,7 +256,15 @@ export const editorActions: (set: any, get: () => EditorState) => EditorActions 
       const { selectedClipId } = get();
       if (!selectedClipId) return;
       const prev = snapshotOf(get());
-      set((state: EditorState) => ({ clips: state.clips.filter((c) => c.id !== selectedClipId), selectedClipId: null }));
+      const clip = get().clips.find((c) => c.id === selectedClipId);
+      set((state: EditorState) => {
+        const filtered = state.clips.filter((c) => c.id !== selectedClipId);
+        // Ripple: shift all clips after this clip's end point left by its duration
+        const shifted = clip
+          ? rippleShift(filtered, clip.startTime + clip.duration, -clip.duration)
+          : filtered;
+        return { clips: shifted, selectedClipId: null };
+      });
       pushUndo(prev);
       get().triggerNotice("Ripple Delete (Shift + Delete)");
     },
@@ -682,6 +716,44 @@ export const editorActions: (set: any, get: () => EditorState) => EditorActions 
     toggleMinimalMode: () => set((state: EditorState) => ({
       minimalMode: !state.minimalMode
     })),
+
+    importMediaFiles: (files) => {
+      const supportedFiles = Array.from(files ?? []).filter((file) => file && file.name && file.size > 0);
+      if (supportedFiles.length === 0) {
+        get().triggerNotice("No valid media files were found");
+        return;
+      }
+
+      const objects = supportedFiles.map((file) => {
+        const type = file.type.startsWith("video/") ? "video" : file.type.startsWith("audio/") ? "audio" : file.type.startsWith("image/") ? "image" : "other";
+        return {
+          id: `media_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`,
+          name: file.name,
+          type,
+          fileType: file.type || "application/octet-stream",
+          size: file.size,
+          url: URL.createObjectURL(file),
+          createdAt: Date.now()
+        } satisfies MediaAsset;
+      });
+
+      const nextClips = objects.map((asset, index) => ({
+        id: `import_${asset.id}`,
+        title: asset.name,
+        trackId: asset.type === "audio" ? "A1" : "V1",
+        type: asset.type === "audio" ? "audio" : "video",
+        startTime: get().clips.length + index * 1.5,
+        duration: asset.type === "audio" ? Math.max(10, Math.round(asset.size / 100000)) : 15,
+        color: asset.type === "audio" ? "bg-emerald-950/60 border-emerald-500/40 text-emerald-300" : "bg-blue-950/60 border-blue-500/40 text-blue-300"
+      } satisfies TrackClip));
+
+      set((state: EditorState) => ({
+        mediaAssets: [...state.mediaAssets, ...objects],
+        clips: [...state.clips, ...nextClips]
+      }));
+
+      get().triggerNotice(`Imported ${objects.length} media file${objects.length > 1 ? "s" : ""}`);
+    },
 
     setTransitionDuration: (seconds) => set({
       transitionDuration: Math.min(3, Math.max(0.1, seconds))

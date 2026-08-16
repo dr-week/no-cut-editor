@@ -133,3 +133,13 @@ export const EDITOR_SHORTCUTS: EditorShortcut[] = [
 export function getEditorShortcutRegistry(): EditorShortcut[] {
   return [...EDITOR_SHORTCUTS];
 }
+
+export function searchEditorShortcuts(query: string): EditorShortcut[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return getEditorShortcutRegistry();
+
+  return EDITOR_SHORTCUTS.filter((shortcut) => {
+    const haystack = `${shortcut.label} ${shortcut.description} ${shortcut.category} ${shortcut.keys}`.toLowerCase();
+    return haystack.includes(q);
+  });
+}

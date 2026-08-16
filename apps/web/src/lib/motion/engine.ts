@@ -181,3 +181,35 @@ export function formatSeconds(seconds: number): string {
   const s = (seconds % 60).toFixed(1);
   return `${m}:${String(Number(s)).padStart(4, "0")}`;
 }
+
+/**
+ * Calculates fit dimensions for any aspect ratio within maximum canvas bounds.
+ */
+export function calculateCanvasAspectDimensions(
+  aspectRatio: "16:9" | "9:16" | "1:1" | "4:5" | "21:9",
+  maxBoundingWidth = 600,
+  maxBoundingHeight = 337
+): { width: number; height: number; scale: number } {
+  const ratios: Record<string, number> = {
+    "16:9": 16 / 9,
+    "9:16": 9 / 16,
+    "1:1": 1,
+    "4:5": 4 / 5,
+    "21:9": 21 / 9,
+  };
+
+  const targetRatio = ratios[aspectRatio] ?? 16 / 9;
+  let width = maxBoundingWidth;
+  let height = Math.round(width / targetRatio);
+
+  if (height > maxBoundingHeight) {
+    height = maxBoundingHeight;
+    width = Math.min(maxBoundingWidth, Math.round(height * targetRatio));
+  } else {
+    width = Math.min(maxBoundingWidth, width);
+  }
+
+  const scale = Number((width / maxBoundingWidth).toFixed(3));
+  return { width, height, scale };
+}
+

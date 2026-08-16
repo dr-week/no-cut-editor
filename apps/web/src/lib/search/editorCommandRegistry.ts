@@ -153,6 +153,51 @@ const commands: EditorCommand[] = [
     keywords: "help shortcuts keys keyboard reference",
     action: () => undefined,
   },
+  {
+    id: "zoom-in-timeline",
+    label: "Zoom In Timeline",
+    description: "Increase the timeline horizontal scale.",
+    shortcut: "=",
+    category: "Timeline",
+    keywords: "zoom in timeline magnification enlarge",
+    action: () => undefined,
+  },
+  {
+    id: "zoom-out-timeline",
+    label: "Zoom Out Timeline",
+    description: "Decrease the timeline horizontal scale.",
+    shortcut: "-",
+    category: "Timeline",
+    keywords: "zoom out timeline shrink reduce",
+    action: () => undefined,
+  },
+  {
+    id: "mark-in-point",
+    label: "Mark In Point",
+    description: "Set the in-point boundary for timeline editing.",
+    shortcut: "I",
+    category: "Timeline",
+    keywords: "mark in point trim boundary",
+    action: () => undefined,
+  },
+  {
+    id: "mark-out-point",
+    label: "Mark Out Point",
+    description: "Set the out-point boundary for timeline editing.",
+    shortcut: "O",
+    category: "Timeline",
+    keywords: "mark out point trim boundary",
+    action: () => undefined,
+  },
+  {
+    id: "toggle-vocal-enhancer",
+    label: "Toggle Vocal Enhancer",
+    description: "Turn AI vocal clarity and noise suppression on or off.",
+    shortcut: "Ctrl+Shift+V",
+    category: "Audio",
+    keywords: "vocal audio voice enhance noise cleanup speech",
+    action: () => undefined,
+  },
 ];
 
 export function searchEditorCommands(query: string): EditorCommand[] {
@@ -164,3 +209,114 @@ export function searchEditorCommands(query: string): EditorCommand[] {
     return haystack.includes(q);
   });
 }
+
+export function getEditorCommands(): EditorCommand[] {
+  return [...commands];
+}
+
+/**
+ * Execute a command by ID against an active EditorActions context.
+ * Returns true if the command was recognized and handled.
+ */
+export function executeEditorCommand(
+  commandId: string,
+  store: {
+    togglePlay?: () => void;
+    splitClip?: () => void;
+    duplicateClip?: () => void;
+    deleteClip?: () => void;
+    rippleDelete?: () => void;
+    seekBy?: (secs: number) => void;
+    toggleSnap?: () => void;
+    toggleMinimalMode?: () => void;
+    runAutoEdit?: () => void;
+    applyEffect?: (id: string) => void;
+    applyLut?: (id: string) => void;
+    setActiveTab?: (tab: string) => void;
+    autosaveProject?: () => void;
+    undo?: () => void;
+    redo?: () => void;
+    toggleVocalEnhance?: () => void;
+    triggerNotice?: (msg: string) => void;
+  }
+): boolean {
+  switch (commandId) {
+    case "play-pause":
+      store.togglePlay?.();
+      return true;
+    case "split-clip":
+      store.splitClip?.();
+      return true;
+    case "duplicate-clip":
+      store.duplicateClip?.();
+      return true;
+    case "delete-clip":
+      store.deleteClip?.();
+      return true;
+    case "ripple-delete":
+      store.rippleDelete?.();
+      return true;
+    case "jump-backward":
+      store.seekBy?.(-1);
+      return true;
+    case "jump-forward":
+      store.seekBy?.(1);
+      return true;
+    case "toggle-snap":
+      store.toggleSnap?.();
+      return true;
+    case "focus-mode":
+      store.toggleMinimalMode?.();
+      return true;
+    case "auto-edit":
+      store.runAutoEdit?.();
+      return true;
+    case "glitch-effect":
+      store.applyEffect?.("fx_glitch_scan");
+      return true;
+    case "color-lut":
+      store.applyLut?.("lut_teal_orange");
+      return true;
+    case "export-video":
+      store.setActiveTab?.("export");
+      store.triggerNotice?.("Switched to Export tab");
+      return true;
+    case "search-presets":
+      store.setActiveTab?.("presets");
+      store.triggerNotice?.("Opened Preset Browser");
+      return true;
+    case "save-project":
+      store.autosaveProject?.();
+      return true;
+    case "undo":
+      store.undo?.();
+      return true;
+    case "redo":
+      store.redo?.();
+      return true;
+    case "toggle-vocal-enhancer":
+      store.toggleVocalEnhance?.();
+      return true;
+    case "zoom-in-timeline":
+      store.triggerNotice?.("Timeline Zoom In");
+      return true;
+    case "zoom-out-timeline":
+      store.triggerNotice?.("Timeline Zoom Out");
+      return true;
+    case "mark-in-point":
+      store.triggerNotice?.("Mark In Point set");
+      return true;
+    case "mark-out-point":
+      store.triggerNotice?.("Mark Out Point set");
+      return true;
+    default: {
+      const found = commands.find((c) => c.id === commandId);
+      if (found) {
+        found.action();
+        return true;
+      }
+      return false;
+    }
+  }
+}
+

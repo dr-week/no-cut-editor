@@ -16,6 +16,13 @@
 - **Time Saved**: ~16-17 days estimated (vs. custom implementation from scratch)
 - **LOC Reused**: 122,000+ lines from proven OSS libraries
 
+## Active Sprint 2 Task (In Progress)
+
+- **Current priority**: integrate preset lookup directly into the command palette and search-first UI flow
+- **Goal**: allow users to type motion or effect keywords and immediately see preset suggestions without manual browsing
+- **Status**: command palette now includes preset suggestions when the query matches a catalog entry
+- **Follow-up**: add preset previews, category chips, and quick apply actions in the advanced preview drawer
+
 ---
 
 ## Sprint 2 High Priority (P0) — Deliver by Aug 24

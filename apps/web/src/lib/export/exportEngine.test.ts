@@ -3,6 +3,9 @@ import {
   resolveBitrate,
   estimateFileSizeKb,
   buildExportFilename,
+  SOCIAL_EXPORT_PRESETS,
+  getSocialPreset,
+  calculateExportProgress,
   type ExportOptions
 } from "./exportEngine";
 
@@ -36,4 +39,21 @@ describe("OpenCut Export Engine (pure helpers)", () => {
     expect(buildExportFilename("   ", "mp4")).toBe("opencut_export.mp4");
     expect(buildExportFilename("trailer-final-4k", "mp4")).toBe("trailer-final-4k.mp4");
   });
+
+  it("provides platform-tuned social export presets", () => {
+    expect(SOCIAL_EXPORT_PRESETS.length).toBeGreaterThanOrEqual(4);
+    const shorts = getSocialPreset("yt-shorts-4k");
+    expect(shorts).toBeDefined();
+    expect(shorts?.width).toBe(1080);
+    expect(shorts?.height).toBe(1920);
+    expect(shorts?.fps).toBe(60);
+  });
+
+  it("calculates progress percentages accurately", () => {
+    expect(calculateExportProgress(5000, 10000)).toBe(50.0);
+    expect(calculateExportProgress(10000, 10000)).toBe(100.0);
+    expect(calculateExportProgress(12000, 10000)).toBe(100.0);
+    expect(calculateExportProgress(0, 10000)).toBe(0.0);
+  });
 });
+

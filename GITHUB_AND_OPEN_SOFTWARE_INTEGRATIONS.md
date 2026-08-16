@@ -1,9 +1,29 @@
 # OpenCut Master GitHub & Open-Source Software Directory (2026+)
 
+## Strategy context
+This file is the repo shortlist and integration index. It is intentionally linked to the project strategy and validation docs:
+- [MASTER_PLAN.md](MASTER_PLAN.md)
+- [PROJECT_STATE.md](PROJECT_STATE.md)
+- [INTEGRATIONS.md](INTEGRATIONS.md)
+- [DEV_TIME_SAVINGS_REPORT.md](DEV_TIME_SAVINGS_REPORT.md)
+- [OPEN_SOURCE_REUSE_AND_OPTIMIZATION.md](OPEN_SOURCE_REUSE_AND_OPTIMIZATION.md)
+
 ## 1. Master GitHub Repositories for 90%+ Zero-Dev Acceleration
 
-| Domain | Recommended GitHub Repository | What it Does | Dev Effort Saved | Replaces Custom Code |
+### Highest-priority auto-video-editor integration list
+
+| Domain | Recommended GitHub Repository | What it does | Dev effort saved | Replaces custom code |
 | :--- | :--- | :--- | :--- | :--- |
+| **Auto cut detection** | [`WyattBlue/auto-editor`](https://github.com/WyattBlue/auto-editor) | Silence and dead-space detection with automatic cuts | **1-2 weeks** | custom VAD and cut selection logic |
+| **Smart cleanup pipeline** | [`benpiper/auto-video-editor`](https://github.com/benpiper/auto-video-editor) | Silence removal, filler-word detection, freeze frames, background removal | **2-4 weeks** | custom cleanup edit pipeline |
+| **Transcript-driven editing** | [`Ekaanth/OpenCut-AI`](https://github.com/Ekaanth/OpenCut-AI) | Smart cut, auto-ducking, transcript editing | **2-5 weeks** | custom AI editing workflow |
+| **Auto clip selection** | [`aregrid/frame`](https://github.com/aregrid/frame) | Scene, motion, and audio-based clip selection | **1-3 weeks** | custom scene detection heuristics |
+| **AI edit orchestration** | [`mfahsold/montage-ai`](https://github.com/mfahsold/montage-ai) | Beat cuts, smart reframe, captions, audio processing | **3-6 weeks** | custom AI editing engine |
+| **Social clip generation** | [`fralapo/clippyme`](https://github.com/fralapo/clippyme) | Viral clips, captions, reframing, social distribution | **1-3 weeks** | custom short-form generator |
+| **Browser editor UI reference** | [`pireel/pireel`](https://github.com/pireel/pireel) | Browser timeline and kinetic caption workbench | **1-2 weeks** | custom preview/editor chrome |
+| **AI edit orchestration + FFmpeg** | [`Relo-video/SynthCut`](https://github.com/Relo-video/SynthCut) | AI-controlled editing and FFmpeg-driven automation | **2-4 weeks** | custom orchestration layer |
+| **Agentic editing pipeline** | [`theSamPadilla/montaj`](https://github.com/theSamPadilla/montaj) | AI-agent style multi-step edit execution | **2-5 weeks** | custom agent workflow |
+| **Transcript cleanup and shorts** | [`FernandoAbishai/ScriptCut`](https://github.com/FernandoAbishai/ScriptCut) | Filler removal and transcript-based shorts generation | **1-3 weeks** | custom transcript editing logic |
 | **Motion Physics & Graph Curves** | [`motiondivision/motion`](https://github.com/motiondivision/motion) | Smooth spring physics & keyframe interpolations | **3 Months** (~20k LOC) | Math algorithms for Bezier/Spring animation |
 | **Programmatic Canvas Motion** | [`motion-canvas/motion-canvas`](https://github.com/motion-canvas/motion-canvas) | Vector animations & lower thirds generator | **3 Months** (~25k LOC) | Custom canvas rendering loop & timeline ticker |
 | **200+ WebGL Transition Shaders** | [`gl-transitions/gl-transitions`](https://github.com/gl-transitions/gl-transitions) | Ready GLSL transitions (Burn, Wipe, Glitch, Morph) | **2 Months** (~18k LOC) | Shader writing & WebGL context texture swapping |
@@ -14,7 +34,7 @@
 | **Fallback CPU Video Transcoding** | [`ffmpegwasm/ffmpeg.wasm`](https://github.com/ffmpegwasm/ffmpeg.wasm) | In-browser WebAssembly FFmpeg CLI converter | **3 Months** (~25k LOC) | C++ Emscripten compilation pipeline |
 | **282+ Premiere AI Actions (MCP)** | [`modelcontextprotocol/typescript-sdk`](https://github.com/modelcontextprotocol/typescript-sdk) | Client/Server agentic video editing tools | **2 Months** (~14k LOC) | Custom tool dispatcher & schema validation |
 | **Local Offline State & Multi-User** | [`dexie/Dexie.js`](https://github.com/dexie/Dexie.js) + [`yjs/yjs`](https://github.com/yjs/yjs) | IndexedDB caching + CRDT real-time timeline sync | **1.5 Months** (~12k LOC) | Complex IndexedDB transactions & conflict resolution |
-| **TOTAL DEV TIME & CODE SAVED** | **Combined Top 10 GitHub Stacks** | **~23 - 25 Months** | **~180,000+ lines of code** | **Full Production NLE Suite** |
+| **TOTAL DEV TIME & CODE SAVED** | **Combined top stacks** | **~23-25 months** | **~180k+ lines of code** | **full production NLE suite** |
 
 ### Newly Researched (this sprint) — More Zero-Dev Wins
 

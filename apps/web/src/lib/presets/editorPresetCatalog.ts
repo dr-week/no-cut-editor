@@ -1,3 +1,10 @@
+import { ANIMATION_PRESETS } from "./animations";
+import { VIDEO_TRANSITIONS } from "./transitions";
+import { EFFECT_PRESETS } from "./effects";
+import { VIDEO_TEMPLATES } from "./templates";
+import { LUT_PRESETS } from "./luts";
+import { TREND_PRESETS } from "./trends";
+
 export type EditorPresetItem = {
   id: string;
   label: string;
@@ -6,7 +13,8 @@ export type EditorPresetItem = {
   kind: "animation" | "transition" | "lut" | "template" | "effect";
 };
 
-export const EDITOR_PRESET_CATALOG: EditorPresetItem[] = [
+// Seed presets for test backward compatibility and specialized preset aliases
+const SEED_PRESETS: EditorPresetItem[] = [
   {
     id: "cinematic-push",
     label: "Cinematic Push",
@@ -77,145 +85,114 @@ export const EDITOR_PRESET_CATALOG: EditorPresetItem[] = [
     keywords: "rgb shift light color chromatic aberration",
     kind: "effect",
   },
-  // Additional animations
   {
-    id: "whip-pan",
-    label: "Whip Pan",
+    id: "preset_hyper_warp_punch",
+    label: "Hyper Warp Punch",
     category: "Animation",
-    keywords: "whip pan fast transition dynamic motion",
+    keywords: "hyper warp punch fast zoom 3d parallax dynamic intro",
     kind: "animation",
   },
   {
-    id: "elastic-bounce",
-    label: "Elastic Bounce",
+    id: "preset_glitch_chroma_shift",
+    label: "Glitch Chroma Shift",
     category: "Animation",
-    keywords: "elastic bounce spring physics playful",
+    keywords: "glitch chroma rgb shift scanline distortion cyberpunk",
     kind: "animation",
   },
   {
-    id: "slide-in-left",
-    label: "Slide In Left",
+    id: "preset_magnetic_snap_title",
+    label: "Magnetic Snap Title",
     category: "Animation",
-    keywords: "slide in left entrance reveal smooth",
+    keywords: "magnetic snap kinetic title typography punch spring pop",
     kind: "animation",
   },
   {
-    id: "zoom-scale-up",
-    label: "Zoom Scale Up",
+    id: "preset_smooth_cinematic_glide",
+    label: "Smooth Cinematic Glide",
     category: "Animation",
-    keywords: "zoom scale grow enlarge focus reveal",
+    keywords: "smooth cinematic glide slow push pan anamorphic",
     kind: "animation",
   },
   {
-    id: "fade-in-blur",
-    label: "Fade In Blur",
+    id: "preset_cyber_scanline_reveal",
+    label: "Cyber Scanline Reveal",
     category: "Animation",
-    keywords: "fade in blur focus soft entrance",
+    keywords: "cyber scanline reveal wipe futuristic hud motion graphic",
     kind: "animation",
-  },
-  {
-    id: "spin-rotate-360",
-    label: "Spin Rotate",
-    category: "Animation",
-    keywords: "spin rotate 360 circle dynamic motion",
-    kind: "animation",
-  },
-  // Additional transitions
-  {
-    id: "dissolve-fade",
-    label: "Dissolve Fade",
-    category: "Transition",
-    keywords: "dissolve fade smooth transition blend",
-    kind: "transition",
-  },
-  {
-    id: "circle-iris",
-    label: "Circle Iris",
-    category: "Transition",
-    keywords: "circle iris reveal spotlight focus transition",
-    kind: "transition",
-  },
-  {
-    id: "push-slide",
-    label: "Push Slide",
-    category: "Transition",
-    keywords: "push slide directional transition movement",
-    kind: "transition",
-  },
-  // Additional LUTs
-  {
-    id: "moody-blue-lut",
-    label: "Moody Blue",
-    category: "Color",
-    keywords: "moody blue dark cool grade mysterious",
-    kind: "lut",
-  },
-  {
-    id: "warm-golden-lut",
-    label: "Warm Golden",
-    category: "Color",
-    keywords: "warm golden sunset orange cozy nostalgic",
-    kind: "lut",
-  },
-  {
-    id: "high-contrast-bw-lut",
-    label: "High Contrast B&W",
-    category: "Color",
-    keywords: "black white monochrome high contrast bold",
-    kind: "lut",
-  },
-  // Additional templates
-  {
-    id: "instagram-reel-template",
-    label: "Instagram Reel",
-    category: "Template",
-    keywords: "instagram reel reels social vertical square",
-    kind: "template",
-  },
-  {
-    id: "podcast-audiogram-template",
-    label: "Podcast Audiogram",
-    category: "Template",
-    keywords: "podcast audio waveform audiogram transcript",
-    kind: "template",
-  },
-  {
-    id: "product-showcase-template",
-    label: "Product Showcase",
-    category: "Template",
-    keywords: "product showcase ecommerce promo highlight",
-    kind: "template",
-  },
-  // Additional effects
-  {
-    id: "bloom-glow-effect",
-    label: "Bloom Glow",
-    category: "Effect",
-    keywords: "bloom glow light halo ethereal bright",
-    kind: "effect",
-  },
-  {
-    id: "vignette-effect",
-    label: "Vignette",
-    category: "Effect",
-    keywords: "vignette darkened edges focus frame",
-    kind: "effect",
-  },
-  {
-    id: "film-grain-effect",
-    label: "Film Grain",
-    category: "Effect",
-    keywords: "film grain noise texture vintage analog",
-    kind: "effect",
-  },
-  {
-    id: "lens-flare-effect",
-    label: "Lens Flare",
-    category: "Effect",
-    keywords: "lens flare light artifact cinematic",
-    kind: "effect",
   },
 ];
+
+// Map animations dynamically
+const dynamicAnimations: EditorPresetItem[] = ANIMATION_PRESETS.map((a) => ({
+  id: a.id,
+  label: a.name,
+  category: "Animation",
+  keywords: `${a.name} ${a.category} ${a.technique} ${a.easing} motion preset animation`.toLowerCase(),
+  kind: "animation",
+}));
+
+// Map transitions dynamically
+const dynamicTransitions: EditorPresetItem[] = VIDEO_TRANSITIONS.map((t) => ({
+  id: t.id,
+  label: t.name,
+  category: "Transition",
+  keywords: `${t.name} ${t.glTransition} ${t.description} transition cut wipe`.toLowerCase(),
+  kind: "transition",
+}));
+
+// Map effects dynamically
+const dynamicEffects: EditorPresetItem[] = EFFECT_PRESETS.map((e) => ({
+  id: e.id,
+  label: e.name,
+  category: "Effect",
+  keywords: `${e.name} ${e.type} ${e.description} effect filter visual`.toLowerCase(),
+  kind: "effect",
+}));
+
+// Map LUTs dynamically
+const dynamicLuts: EditorPresetItem[] = LUT_PRESETS.map((l) => ({
+  id: l.id,
+  label: l.name,
+  category: "Color",
+  keywords: `${l.name} ${l.file} ${l.description} lut color grade look`.toLowerCase(),
+  kind: "lut",
+}));
+
+// Map templates dynamically
+const dynamicTemplates: EditorPresetItem[] = VIDEO_TEMPLATES.map((t) => ({
+  id: t.id,
+  label: t.name,
+  category: "Template",
+  keywords: `${t.name} ${t.category} ${t.tags.join(" ")} ${t.description} template project preset`.toLowerCase(),
+  kind: "template",
+}));
+
+// Map trends dynamically
+const dynamicTrends: EditorPresetItem[] = TREND_PRESETS.map((tr) => ({
+  id: tr.id,
+  label: tr.title,
+  category: "Template",
+  keywords: `${tr.title} ${tr.platform} ${tr.niche} ${tr.description} trend auto-edit viral`.toLowerCase(),
+  kind: "template",
+}));
+
+// Combine with deduplication
+const allRawPresets = [
+  ...SEED_PRESETS,
+  ...dynamicAnimations,
+  ...dynamicTransitions,
+  ...dynamicEffects,
+  ...dynamicLuts,
+  ...dynamicTemplates,
+  ...dynamicTrends,
+];
+
+const seenIds = new Set<string>();
+export const EDITOR_PRESET_CATALOG: EditorPresetItem[] = allRawPresets.filter((item) => {
+  if (seenIds.has(item.id)) return false;
+  seenIds.add(item.id);
+  return true;
+});
 
 // Helper function to search presets by keyword, category, or label
 export function searchPresetCatalog(query: string): EditorPresetItem[] {

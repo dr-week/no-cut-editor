@@ -7,6 +7,7 @@ import {
   springSimulate,
   formatTimecode,
   formatSeconds,
+  calculateCanvasAspectDimensions,
   DEFAULT_TRANSFORM
 } from "./engine";
 import { ANIMATION_PRESETS, getAnimationPreset } from "#/lib/presets/animations";
@@ -114,6 +115,20 @@ describe("Motion Graphics Engine", () => {
       expect(clamp(12, 0, 10)).toBe(10);
       expect(clamp(-5, 0, 10)).toBe(0);
       expect(clamp(5, 0, 10)).toBe(5);
+    });
+
+    it("calculates canvas aspect dimensions for 16:9, 9:16 and 1:1", () => {
+      const widescreen = calculateCanvasAspectDimensions("16:9", 600, 337);
+      expect(widescreen.height).toBeLessThanOrEqual(338);
+      expect(widescreen.width).toBeGreaterThanOrEqual(598);
+
+      const vertical = calculateCanvasAspectDimensions("9:16", 600, 337);
+      expect(vertical.height).toBe(337);
+      expect(vertical.width).toBeLessThan(300);
+
+      const square = calculateCanvasAspectDimensions("1:1", 600, 337);
+      expect(square.width).toBe(337);
+      expect(square.height).toBe(337);
     });
   });
 });
