@@ -124,6 +124,228 @@
   body {
     @apply bg-background text-foreground;
     }
+  
+  /* IMAGEVUE Film Shaders & Dynamic Cinema Overlays */
+  .fx-vignette {
+    background: radial-gradient(ellipse at center, transparent 42%, rgba(0, 0, 0, var(--vignette-opacity, 0.45)) 100%);
+    pointer-events: none;
+  }
+  .fx-crt {
+    opacity: var(--crt-opacity, 0.4);
+    mix-blend-mode: multiply;
+    pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.22) 0 1px, transparent 1px 3px), repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 5px);
+  }
+  .fx-dust {
+    opacity: var(--dust-opacity, 0.25);
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='d'%3E%3CfeTurbulence type='turbulence' baseFrequency='.04 .9' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23d)'/%3E%3C/svg%3E");
+    animation: grain-jitter 0.4s steps(3) infinite;
+  }
+  .fx-grain {
+    opacity: var(--grain-opacity, 0.12);
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+    animation: grain-jitter 0.2s steps(2) infinite;
+  }
+  @keyframes grain-jitter {
+    0% { background-position: 0 0; }
+    25% { background-position: 7% -5%; }
+    50% { background-position: -4% 8%; }
+    75% { background-position: 5% 4%; }
+    100% { background-position: -8% -6%; }
+  }
+
+  /* OpenCut Procedural Effect Overlays (CSS/WebGL stand-ins) */
+  .fx-chromatic {
+    pointer-events: none;
+    mix-blend-mode: screen;
+    background: repeating-linear-gradient(90deg, rgba(255, 0, 80, 0.35) 0 2px, rgba(0, 240, 255, 0.35) 2px 4px, transparent 4px 6px);
+    animation: chromatic-shift 0.12s steps(2) infinite;
+  }
+  @keyframes chromatic-shift {
+    0% { transform: translateX(-1px); }
+    100% { transform: translateX(1px); }
+  }
+  .fx-rgb-wave {
+    pointer-events: none;
+    mix-blend-mode: screen;
+    background:
+      repeating-linear-gradient(0deg, rgba(255, 0, 0, 0.5) 0 1px, transparent 1px 4px),
+      repeating-linear-gradient(0deg, rgba(0, 255, 0, 0.4) 0 1px, transparent 1px 6px),
+      repeating-linear-gradient(0deg, rgba(0, 0, 255, 0.5) 0 1px, transparent 1px 8px);
+    animation: rgb-wave 0.5s steps(4) infinite;
+  }
+  @keyframes rgb-wave {
+    0% { background-position: 0 0, 0 0, 0 0; }
+    100% { background-position: 0 8px, 0 -6px, 0 3px; }
+  }
+  .fx-anamorphic {
+    pointer-events: none;
+    mix-blend-mode: screen;
+    background: radial-gradient(ellipse 200% 8% at 50% 50%, rgba(90, 180, 255, 0.5) 0%, transparent 60%),
+      radial-gradient(ellipse 160% 6% at 30% 30%, rgba(120, 200, 255, 0.35) 0%, transparent 60%),
+      radial-gradient(ellipse 160% 6% at 70% 70%, rgba(120, 200, 255, 0.35) 0%, transparent 60%);
+  }
+  .fx-glitch-scan {
+    pointer-events: none;
+    mix-blend-mode: screen;
+    background: linear-gradient(0deg, transparent 45%, rgba(255, 0, 80, 0.3) 47%, transparent 49%, transparent 51%, rgba(0, 240, 255, 0.3) 53%, transparent 55%);
+    animation: glitch-scan 0.3s steps(3) infinite;
+  }
+  @keyframes glitch-scan {
+    0% { background-position: 0 0; }
+    33% { background-position: 0 -30px; }
+    66% { background-position: 0 40px; }
+    100% { background-position: 0 0; }
+  }
+  .fx-heat-haze {
+    pointer-events: none;
+    mix-blend-mode: overlay;
+    background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.06) 0 2px, transparent 2px 6px);
+    filter: blur(1px);
+    animation: heat-haze 0.8s ease-in-out infinite alternate;
+  }
+  @keyframes heat-haze {
+    0% { transform: skewY(0.4deg) translateY(-1px); }
+    100% { transform: skewY(-0.4deg) translateY(1px); }
+  }
+  .fx-static {
+    pointer-events: none;
+    mix-blend-mode: overlay;
+    opacity: 0.3;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E");
+    animation: grain-jitter 0.1s steps(2) infinite;
+  }
+  .fx-ripple {
+    pointer-events: none;
+    background: repeating-radial-gradient(circle at 50% 50%, transparent 0 8px, rgba(255, 255, 255, 0.12) 8px 9px, transparent 9px 18px);
+    mix-blend-mode: overlay;
+    animation: ripple-zoom 2s linear infinite;
+  }
+  @keyframes ripple-zoom {
+    0% { background-size: 100% 100%; }
+    100% { background-size: 220% 220%; }
+  }
+  .fx-neon-glow {
+    pointer-events: none;
+    mix-blend-mode: screen;
+    background: radial-gradient(ellipse at 50% 50%, rgba(255, 0, 200, 0.18) 0%, rgba(0, 255, 255, 0.12) 40%, transparent 70%);
+    animation: neon-pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes neon-pulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+  }
+  .fx-dream-blur {
+    pointer-events: none;
+    backdrop-filter: blur(4px);
+    background: radial-gradient(ellipse at center, transparent 30%, rgba(255, 255, 255, 0.06) 60%, rgba(120, 140, 255, 0.1) 100%);
+  }
+  .fx-film-scratch {
+    pointer-events: none;
+    opacity: 0.5;
+    mix-blend-mode: screen;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.02 0.9' numOctaves='2' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+    animation: grain-jitter 0.25s steps(3) infinite;
+  }
+  .fx-letterbox {
+    pointer-events: none;
+    background: linear-gradient(0deg, black 0%, black 9%, transparent 9%, transparent 91%, black 91%, black 100%);
+  }
+  .fx-vignette-hard {
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 35%, rgba(0, 0, 0, 0.9) 100%);
+  }
+  .fx-camera-roll {
+    pointer-events: none;
+    mix-blend-mode: multiply;
+    background: radial-gradient(ellipse at 45% 55%, transparent 40%, rgba(0, 0, 0, 0.5) 100%);
+    animation: camera-roll 0.18s steps(2) infinite;
+  }
+  @keyframes camera-roll {
+    0% { transform: rotate(-0.4deg) translateX(-1px); }
+    100% { transform: rotate(0.4deg) translateX(1px); }
+  }
+  .fx-scanline {
+    pointer-events: none;
+    opacity: 0.5;
+    mix-blend-mode: overlay;
+    background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.18) 0 1px, transparent 1px 3px);
+  }
+  .fx-watercolor {
+    pointer-events: none;
+    mix-blend-mode: soft-light;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(80, 120, 200, 0.35) 0 18%, transparent 40%),
+      radial-gradient(circle at 70% 60%, rgba(200, 90, 130, 0.3) 0 22%, transparent 45%),
+      radial-gradient(circle at 45% 80%, rgba(120, 180, 140, 0.3) 0 20%, transparent 42%);
+    animation: watercolor-drift 6s ease-in-out infinite;
+  }
+  @keyframes watercolor-drift {
+    0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.7; }
+    50% { transform: scale(1.08) rotate(2deg); opacity: 1; }
+  }
+  .fx-kaleido {
+    pointer-events: none;
+    mix-blend-mode: screen;
+    opacity: 0.35;
+    background: conic-gradient(from 0deg, #22d3ee, #f0abfc, #fbbf24, #34d399, #22d3ee);
+    -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 70%);
+    mask-image: radial-gradient(circle at center, black 30%, transparent 70%);
+    animation: kaleido-spin 8s linear infinite;
+  }
+  @keyframes kaleido-spin {
+    to { transform: rotate(360deg); }
+  }
+  .fx-halftone {
+    pointer-events: none;
+    mix-blend-mode: overlay;
+    opacity: 0.4;
+    background-image: radial-gradient(circle, rgba(0, 0, 0, 0.5) 1px, transparent 1.5px);
+    background-size: 5px 5px;
+  }
+  .fx-vhs {
+    pointer-events: none;
+    mix-blend-mode: screen;
+    background: repeating-linear-gradient(0deg, rgba(255, 0, 100, 0.12) 0 2px, transparent 2px 5px);
+    animation: vhs-jitter 0.22s steps(3) infinite;
+  }
+  @keyframes vhs-jitter {
+    0% { transform: translateX(0); opacity: 0.8; }
+    33% { transform: translateX(-2px); opacity: 1; }
+    66% { transform: translateX(2px); opacity: 0.85; }
+    100% { transform: translateX(0); opacity: 0.9; }
+  }
+  .fx-frost {
+    pointer-events: none;
+    backdrop-filter: blur(6px) saturate(1.4);
+    -webkit-backdrop-filter: blur(6px) saturate(1.4);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+  }
+  .fx-polarize {
+    pointer-events: none;
+    mix-blend-mode: color;
+    background: linear-gradient(90deg, #0ea5e9, #e879f9, #f59e0b, #34d399);
+    opacity: 0.28;
+  }
+  .fx-clouds {
+    pointer-events: none;
+    mix-blend-mode: soft-light;
+    opacity: 0.5;
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.8) 0 12%, transparent 28%),
+      radial-gradient(ellipse at 70% 40%, rgba(255, 255, 255, 0.7) 0 15%, transparent 32%),
+      radial-gradient(ellipse at 50% 70%, rgba(255, 255, 255, 0.6) 0 18%, transparent 38%);
+    animation: clouds-drift 12s linear infinite;
+  }
+  @keyframes clouds-drift {
+    from { transform: translateX(-5%); }
+    to { transform: translateX(5%); }
+  }
+
   html {
     @apply font-sans;
     }
