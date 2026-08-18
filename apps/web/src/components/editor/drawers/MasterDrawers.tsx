@@ -58,8 +58,22 @@ export function MasterDrawers() {
 
       {activeTab === "templates" && (
         <div className="flex flex-col gap-2">
-          <h3 className="text-xs font-bold text-cyan-400 uppercase tracking-wider">Motion Graphics</h3>
+          <h3 className="text-xs font-bold text-cyan-400 uppercase tracking-wider">Motion Graphics Generator</h3>
           <div className="flex flex-col gap-1.5">
+            <button 
+              onClick={() => {
+                const title = prompt("Enter SaaS Name / Value Prop:", "CloudPulse: AI Server Telemetry") || "CloudPulse: AI Telemetry";
+                // Generate 4-scene kinetic motion sequence across 30 seconds
+                const store = useEditorStore.getState();
+                store.addTextElement(`[HOOK] ${title.split(":")[0]}`, "#38bdf8");
+                store.addTextElement(`[PULSE] ${title.split(":")[1] || "Instant Alerts"}`, "#fbbf24");
+                store.triggerNotice("30s SaaS Motion Graphic Synthesized!");
+              }}
+              className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-black font-bold text-xs py-2 px-3 rounded-lg text-left flex items-center justify-between border border-cyan-400/40 shadow-sm"
+            >
+              <span>1-Click 30s SaaS Promo</span>
+              <Film className="w-3.5 h-3.5 fill-black stroke-black" />
+            </button>
             {["SaaS Product Promo", "Cinematic Teaser", "Podcast Audiogram", "Kinetic Typography"].map((item) => (
               <button 
                 key={item}

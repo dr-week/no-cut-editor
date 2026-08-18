@@ -34,26 +34,42 @@ uniform sampler2D u_image;
 uniform float u_lift;
 uniform float u_gamma;
 uniform float u_gain;
+uniform int u_lutType;
 
-// Apply Lift (shadows), Gamma (midtones), and Gain (highlights)
+// Apply Lift, Gamma, Gain, and Film LUT grading curve
 vec3 applyLumetri(vec3 color, float lift, float gamma, float gain) {
-  // Lift: offsets darks
   vec3 lifted = color + vec3(lift * 0.01);
-  
-  // Gain: scales highlights
   vec3 gained = lifted * (1.0 + gain * 0.01);
-  
-  // Gamma: power curve for midtones
   float gammaExp = 1.0 / max(0.01, (1.0 + gamma * 0.01));
   vec3 gammaCorrected = pow(max(vec3(0.0), gained), vec3(gammaExp));
-  
   return clamp(gammaCorrected, 0.0, 1.0);
+}
+
+// 3D LUT Film Emulation (Kodak 2383 / Fuji / Teal & Orange / Bleach Bypass)
+vec3 apply3DLUT(vec3 color, int lutType) {
+  if (lutType == 1) {
+    // Kodak 2383 Film Print: Deep shadows, warm highlights, dense greens
+    return vec3(pow(color.r, 0.95) * 1.05, pow(color.g, 1.0) * 0.98, pow(color.b, 1.1) * 0.92);
+  } else if (lutType == 2) {
+    // Teal & Orange Blockbuster: Boost orange skin tones, push shadows cyan
+    float avg = (color.r + color.g + color.b) / 3.0;
+    return mix(color, vec3(color.r * 1.15, color.g * 0.95, color.b * 1.25), 0.4);
+  } else if (lutType == 3) {
+    // Fuji F-125: High dynamic range, soft contrast
+    return vec3(pow(color.r, 1.05) * 0.96, pow(color.g, 0.95) * 1.02, pow(color.b, 1.0) * 1.04);
+  } else if (lutType == 4) {
+    // Bleach Bypass: High contrast, desaturated silver look
+    float lum = dot(color, vec3(0.2126, 0.7152, 0.0722));
+    return mix(color, vec3(lum), 0.45) * 1.1;
+  }
+  return color; // Rec.709 Pass-through
 }
 
 void main() {
   vec4 texColor = texture(u_image, v_texCoord);
   vec3 graded = applyLumetri(texColor.rgb, u_lift, u_gamma, u_gain);
-  fragColor = vec4(graded, texColor.a);
+  vec3 lutResult = apply3DLUT(graded, u_lutType);
+  fragColor = vec4(lutResult, texColor.a);
 }
 `;
 
@@ -69,6 +85,7 @@ export class WebGLShaderPipeline {
   private uLiftLoc: WebGLUniformLocation | null = null;
   private uGammaLoc: WebGLUniformLocation | null = null;
   private uGainLoc: WebGLUniformLocation | null = null;
+  private uLutTypeLoc: WebGLUniformLocation | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
     this.initGL(canvas);
@@ -103,6 +120,7 @@ export class WebGLShaderPipeline {
     this.uLiftLoc = gl.getUniformLocation(program, "u_lift");
     this.uGammaLoc = gl.getUniformLocation(program, "u_gamma");
     this.uGainLoc = gl.getUniformLocation(program, "u_gain");
+    this.uLutTypeLoc = gl.getUniformLocation(program, "u_lutType");
 
     // Setup Quad Geometry
     this.vao = gl.createVertexArray();
@@ -178,10 +196,19 @@ export class WebGLShaderPipeline {
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     gl.useProgram(this.program);
 
-    // Update Lumetri Uniforms
+    // Update Lumetri & 3D LUT Uniforms
     gl.uniform1f(this.uLiftLoc, uniforms.lift);
     gl.uniform1f(this.uGammaLoc, uniforms.gamma);
     gl.uniform1f(this.uGainLoc, uniforms.gain);
+
+    const lutMap: Record<string, number> = {
+      "Kodak 2383": 1,
+      "Teal & Orange": 2,
+      "Fuji F-125": 3,
+      "Bleach Bypass": 4,
+    };
+    const lutCode = lutMap[uniforms.activeLUT] || 0;
+    gl.uniform1i(this.uLutTypeLoc, lutCode);
 
     // Upload ImageBitmap directly to GPU texture (zero-copy)
     gl.activeTexture(gl.TEXTURE0);

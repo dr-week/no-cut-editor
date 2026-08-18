@@ -36,12 +36,26 @@ export function OpenCutEditor() {
   const rippleDelete = useEditorStore((s) => s.rippleDelete);
   const triggerNotice = useEditorStore((s) => s.triggerNotice);
 
-  // Global Premiere Keyboard Shortcuts Listener
+  // Global Premiere Keyboard Shortcuts Listener (with Undo/Redo & J-K-L Shuttle)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (["INPUT", "TEXTAREA"].includes((e.target as HTMLElement)?.tagName)) return;
 
       const key = e.key.toLowerCase();
+      const isCtrlOrMeta = e.ctrlKey || e.metaKey;
+
+      // Undo / Redo
+      if (isCtrlOrMeta && key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        useEditorStore.getState().undo();
+        return;
+      }
+      if (isCtrlOrMeta && (key === "y" || (key === "z" && e.shiftKey))) {
+        e.preventDefault();
+        useEditorStore.getState().redo();
+        return;
+      }
+
       if (e.code === "Space") {
         e.preventDefault();
         togglePlay();
@@ -57,6 +71,20 @@ export function OpenCutEditor() {
         triggerNotice("Mark In (I)");
       } else if (key === "o") {
         triggerNotice("Mark Out (O)");
+      } else if (key === "j") {
+        // Shuttle Back
+        const engine = (window as any).__OPEN_CUT_ENGINE__ || EditorEngine.getInstance();
+        engine.seek(Math.max(0, engine.currentTime - 2));
+        triggerNotice("Shuttle Rewind (J)");
+      } else if (key === "k") {
+        // Shuttle Stop
+        EditorEngine.getInstance().pause();
+        triggerNotice("Shuttle Pause (K)");
+      } else if (key === "l") {
+        // Shuttle Forward
+        const engine = EditorEngine.getInstance();
+        engine.seek(Math.min(engine.duration, engine.currentTime + 2));
+        triggerNotice("Shuttle Forward (L)");
       }
     };
 

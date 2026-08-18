@@ -36,11 +36,12 @@ export function StageViewport({ aspectRatio, setAspectRatio }: StageViewportProp
 
   const stageDim = getStageDimensions();
 
-  // Initialize pure WebGL2 Video Layer (Decoupled Layer 1)
+  // Initialize pure WebGL2 Video Layer (Decoupled Layer 1 with HiDPI support)
   useEffect(() => {
     if (canvasRef.current) {
-      canvasRef.current.width = stageDim.width;
-      canvasRef.current.height = stageDim.height;
+      const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+      canvasRef.current.width = stageDim.width * dpr;
+      canvasRef.current.height = stageDim.height * dpr;
       pipelineRef.current = new WebGLShaderPipeline(canvasRef.current);
     }
     return () => {
