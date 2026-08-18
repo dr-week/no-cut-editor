@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
 // Mock Tone.js — jsdom has no real AudioContext
+const mockTransport = { seconds: 10, start: vi.fn(), pause: vi.fn(), stop: vi.fn() };
 vi.mock("tone", () => ({
   start: vi.fn().mockResolvedValue(undefined),
-  getTransport: () => ({ seconds: 0, start: vi.fn(), pause: vi.fn(), stop: vi.fn() }),
+  getTransport: () => mockTransport,
 }));
 vi.mock("../audio/ToneAudioEngine", () => ({
   ToneAudioEngine: { getInstance: () => ({ play: vi.fn(), pause: vi.fn(), seek: vi.fn() }) },

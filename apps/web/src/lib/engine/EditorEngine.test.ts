@@ -1,9 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
 // Mock Tone.js — jsdom has no real AudioContext
+// Use a shared mutable object so engine.seek() writes to the same ref engine.currentTime reads from
+const mockTransport = { seconds: 0, start: vi.fn(), pause: vi.fn(), stop: vi.fn() };
 vi.mock("tone", () => ({
   start: vi.fn().mockResolvedValue(undefined),
-  getTransport: () => ({ seconds: 0, start: vi.fn(), pause: vi.fn(), stop: vi.fn() }),
+  getTransport: () => mockTransport,
 }));
 vi.mock("#/lib/audio/ToneAudioEngine", () => ({
   ToneAudioEngine: { getInstance: () => ({ play: vi.fn(), pause: vi.fn(), seek: vi.fn() }) },
@@ -48,13 +50,13 @@ describe("EditorEngine Sub-16ms Monotonic Clock", () => {
     unsubscribe();
   });
 
-  it("notifies play state change subscribers for UI-Sync", () => {
+  it("notifies play state change subscribers for UI-Sync", async () => {
     let playState = false;
     const unsubscribe = engine.subscribePlayState((isPlaying) => {
       playState = isPlaying;
     });
 
-    engine.play();
+    await engine.play(); // async since Tone.start() is awaited
     expect(playState).toBe(true);
     engine.pause();
     expect(playState).toBe(false);
