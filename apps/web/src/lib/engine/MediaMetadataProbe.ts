@@ -6,7 +6,7 @@
  * @module apps/web/src/lib/engine/MediaMetadataProbe
  */
 
-import MP4Box from "mp4box";
+import * as MP4Box from "mp4box";
 
 export interface MediaMetadata {
   duration: number;       // Exact duration in seconds
