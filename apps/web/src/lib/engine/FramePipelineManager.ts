@@ -80,12 +80,20 @@ export class FramePipelineManager {
     });
   }
 
+  private refCounts = new Map<string, number>();
+
   private handleWorkerMessage(data: any) {
     this.isWorkerBusy = false;
 
     if (data.type === "FRAME_DECODED" && data.bitmap) {
+      const frameKey = `frame_${data.timestamp?.toFixed(2)}`;
+      
+      // Manage Texture Reference Count (Issue #10 Fix)
+      const currentRefs = this.refCounts.get(frameKey) || 0;
+      this.refCounts.set(frameKey, currentRefs + 1);
+
       // Stash in LRU cache
-      AssetCacheManager.cacheAsset(`frame_${data.timestamp?.toFixed(2)}`, data.bitmap);
+      AssetCacheManager.cacheAsset(frameKey, data.bitmap);
 
       // Only emit if it matches or exceeds our latest sequence expectation
       if (data.sequenceId >= this.currentSequenceId - 2) {
@@ -106,6 +114,20 @@ export class FramePipelineManager {
     }
   }
 
+  /**
+   * Decrements reference count and closes ImageBitmap when count hits 0.
+   */
+  public releaseFrame(timestamp: number) {
+    const frameKey = `frame_${timestamp.toFixed(2)}`;
+    const count = (this.refCounts.get(frameKey) || 1) - 1;
+    if (count <= 0) {
+      this.refCounts.delete(frameKey);
+      AssetCacheManager.remove(frameKey);
+    } else {
+      this.refCounts.set(frameKey, count);
+    }
+  }
+
   public subscribe(cb: (frame: DecodedFrameResult) => void): () => void {
     this.onFrameCallbacks.push(cb);
     return () => {
@@ -123,5 +145,6 @@ export class FramePipelineManager {
     this.worker?.terminate();
     this.worker = null;
     this.onFrameCallbacks = [];
+    this.refCounts.clear();
   }
 }
