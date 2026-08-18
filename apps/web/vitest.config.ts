@@ -1,16 +1,17 @@
+/// <reference types="vitest" />
 import { defineConfig } from "vitest/config";
-import react from "@vitejs/plugin-react";
-import path from "node:path";
+import viteReact from "@vitejs/plugin-react";
+import path from "path";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [viteReact()],
   test: {
     environment: "jsdom",
     globals: true,
   },
   resolve: {
     alias: {
-      "#": path.resolve(import.meta.dirname, "./src"),
+      "#": path.resolve(__dirname, "./src"),
     },
   },
 });

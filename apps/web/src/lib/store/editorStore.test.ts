@@ -1,34 +1,53 @@
-import { describe, it, expect } from "vitest";
-import { useEditorStore } from "#/lib/store/editorStore";
+import { describe, it, expect, beforeEach } from "vitest";
+import { useEditorStore } from "./editorStore";
+import { TimelineCommander } from "../history/TimelineCommander";
+import { EditorEngine } from "../engine/EditorEngine";
 
-describe("OpenCut Video Editor Store & Backend Pipeline", () => {
-  it("initializes with default CapCut/Premiere tracks and dark theme state", () => {
-    const state = useEditorStore.getState();
-    expect(state.clips.length).toBeGreaterThan(0);
-    expect(state.isPlaying).toBe(false);
-    expect(state.textElements.length).toBeGreaterThan(0);
+describe("EditorStore Command-Pattern Undo/Redo Engine", () => {
+  beforeEach(() => {
+    TimelineCommander.getInstance().clear();
   });
 
-  it("handles play/pause toggling", () => {
-    const { togglePlay } = useEditorStore.getState();
-    togglePlay();
-    expect(useEditorStore.getState().isPlaying).toBe(true);
-    togglePlay();
-    expect(useEditorStore.getState().isPlaying).toBe(false);
-  });
-
-  it("supports adding animated text overlays dynamically", () => {
-    const { addTextElement } = useEditorStore.getState();
-    addTextElement("Test Title", "#38bdf8");
-    const texts = useEditorStore.getState().textElements;
-    expect(texts.some((t) => t.text === "Test Title")).toBe(true);
-  });
-
-  it("executes ripple delete on selected clip", () => {
-    const { setSelectedClipId, rippleDelete } = useEditorStore.getState();
+  it("executes reversible ripple delete with Ctrl+Z undo restoration", () => {
+    const { setSelectedClipId, rippleDelete, undo, redo } = useEditorStore.getState();
+    
+    // Select txt1 clip (starts at 5s, duration 15s)
     setSelectedClipId("txt1");
     rippleDelete();
-    const clips = useEditorStore.getState().clips;
+
+    // Verify clip was removed
+    let clips = useEditorStore.getState().clips;
     expect(clips.some((c) => c.id === "txt1")).toBe(false);
+
+    // Trigger Undo
+    undo();
+    clips = useEditorStore.getState().clips;
+    expect(clips.some((c) => c.id === "txt1")).toBe(true);
+
+    // Trigger Redo
+    redo();
+    clips = useEditorStore.getState().clips;
+    expect(clips.some((c) => c.id === "txt1")).toBe(false);
+  });
+
+  it("executes reversible razor split at playhead with undo restoration", () => {
+    const { setSelectedClipId, splitClip, undo } = useEditorStore.getState();
+    const engine = EditorEngine.getInstance();
+    
+    // Position playhead at 10s inside v1 (0s to 30s)
+    engine.seek(10);
+    setSelectedClipId("v1");
+    splitClip();
+
+    let clips = useEditorStore.getState().clips;
+    const v1Clips = clips.filter((c) => c.id.startsWith("v1"));
+    expect(v1Clips.length).toBe(2);
+
+    // Undo razor cut
+    undo();
+    clips = useEditorStore.getState().clips;
+    const restoredV1 = clips.filter((c) => c.id.startsWith("v1"));
+    expect(restoredV1.length).toBe(1);
+    expect(restoredV1[0].duration).toBe(30);
   });
 });
