@@ -60,29 +60,80 @@ export function MediaPoolDrawer() {
         <span className="text-[11px] font-semibold text-neutral-400">Bin Assets</span>
         <div className="grid grid-cols-2 gap-2">
           {/* Default Sample Assets */}
-          <div className="bg-neutral-900 rounded-lg p-2 border border-neutral-800 flex flex-col gap-1 cursor-pointer hover:border-cyan-500/50 transition">
-            <div className="h-16 bg-neutral-800 rounded flex items-center justify-center text-neutral-400 text-xs">
+          <div 
+            onClick={() => {
+              useEditorStore.getState().addTrackClip({
+                id: `v1_${Date.now()}`,
+                title: "Main_Video_Track.mp4",
+                trackId: "V1",
+                type: "video",
+                startTime: 30,
+                duration: 15,
+                color: "bg-blue-950/60 border-blue-500/40 text-blue-300",
+              });
+            }}
+            className="bg-neutral-900 rounded-lg p-2 border border-neutral-800 flex flex-col gap-1 cursor-pointer hover:border-cyan-500/50 transition group"
+          >
+            <div className="h-16 bg-neutral-800 rounded flex items-center justify-center text-neutral-400 text-xs group-hover:text-cyan-400">
               <Film className="w-5 h-5 text-cyan-400" />
             </div>
             <span className="text-[10px] font-medium truncate text-neutral-300">Main_Video_Track.mp4</span>
+            <span className="text-[9px] text-cyan-400 font-semibold">+ Add to V1</span>
           </div>
 
-          <div className="bg-neutral-900 rounded-lg p-2 border border-neutral-800 flex flex-col gap-1 cursor-pointer hover:border-cyan-500/50 transition">
-            <div className="h-16 bg-neutral-800 rounded flex items-center justify-center text-neutral-400 text-xs">
+          <div 
+            onClick={() => {
+              useEditorStore.getState().addTrackClip({
+                id: `a1_${Date.now()}`,
+                title: "Background_Music.mp3",
+                trackId: "A1",
+                type: "audio",
+                startTime: 15,
+                duration: 30,
+                color: "bg-emerald-950/60 border-emerald-500/40 text-emerald-300",
+                waveform: [40, 65, 80, 95, 70, 50, 85, 100, 60, 45, 75, 90],
+              });
+            }}
+            className="bg-neutral-900 rounded-lg p-2 border border-neutral-800 flex flex-col gap-1 cursor-pointer hover:border-cyan-500/50 transition group"
+          >
+            <div className="h-16 bg-neutral-800 rounded flex items-center justify-center text-neutral-400 text-xs group-hover:text-emerald-400">
               <Music className="w-5 h-5 text-emerald-400" />
             </div>
             <span className="text-[10px] font-medium truncate text-neutral-300">Background_Music.mp3</span>
+            <span className="text-[9px] text-emerald-400 font-semibold">+ Add to A1</span>
           </div>
 
           {/* User Ingested Dynamic Assets */}
           {ingestedAssets.map((asset) => (
-            <div key={asset.id} className="bg-neutral-900 rounded-lg p-2 border border-neutral-800 flex flex-col gap-1 cursor-pointer hover:border-cyan-500/50 transition">
+            <div 
+              key={asset.id} 
+              onClick={() => {
+                const trackId = asset.type === "video" ? "V1" : asset.type === "audio" ? "A1" : "TXT";
+                useEditorStore.getState().addTrackClip({
+                  id: `clip_${Date.now()}`,
+                  title: asset.name,
+                  trackId,
+                  type: asset.type === "image" ? "text" : asset.type,
+                  startTime: 0,
+                  duration: asset.duration || 15,
+                  color:
+                    trackId === "V1"
+                      ? "bg-blue-950/60 border-blue-500/40 text-blue-300"
+                      : trackId === "A1"
+                      ? "bg-emerald-950/60 border-emerald-500/40 text-emerald-300"
+                      : "bg-amber-950/60 border-amber-500/40 text-amber-300",
+                  waveform: asset.waveform,
+                });
+              }}
+              className="bg-neutral-900 rounded-lg p-2 border border-neutral-800 flex flex-col gap-1 cursor-pointer hover:border-cyan-500/50 transition group"
+            >
               <div className="h-16 bg-neutral-800 rounded flex items-center justify-center text-neutral-400 text-xs">
                 {asset.type === "video" && <Film className="w-5 h-5 text-cyan-400" />}
                 {asset.type === "audio" && <Music className="w-5 h-5 text-emerald-400" />}
                 {asset.type === "image" && <ImageIcon className="w-5 h-5 text-amber-400" />}
               </div>
               <span className="text-[10px] font-medium truncate text-neutral-300">{asset.name}</span>
+              <span className="text-[9px] text-cyan-400 font-semibold">+ Add to Track</span>
             </div>
           ))}
         </div>

@@ -66,6 +66,7 @@ export interface EditorState {
   setActiveLUT: (lut: string) => void;
 
   // Command-Pattern Timeline Operations (Undo/Redo Safe)
+  addTrackClip: (clip: TrackClip) => void;
   splitClip: () => void;
   rippleDelete: () => void;
   undo: () => void;
@@ -157,6 +158,27 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   // --- Command-Pattern Operations (Store-as-Orchestrator) ---
+  addTrackClip: (newClip: TrackClip) => {
+    const command: Command = {
+      id: `add_clip_${Date.now()}`,
+      description: `Add ${newClip.title} to ${newClip.trackId}`,
+      execute: () => {
+        set((state) => ({
+          clips: [...state.clips, newClip],
+          selectedClipId: newClip.id,
+        }));
+      },
+      undo: () => {
+        set((state) => ({
+          clips: state.clips.filter((c) => c.id !== newClip.id),
+          selectedClipId: null,
+        }));
+      },
+    };
+    TimelineCommander.getInstance().execute(command);
+    get().triggerNotice(`Added ${newClip.title} to ${newClip.trackId} (Ctrl+Z to Undo)`);
+  },
+
   splitClip: () => {
     const { selectedClipId, clips } = get();
     if (!selectedClipId) return;
