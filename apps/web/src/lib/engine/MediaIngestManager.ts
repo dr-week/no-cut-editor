@@ -94,11 +94,12 @@ export class MediaIngestManager {
     // Cache file blob in LRU memory
     AssetCacheManager.cacheAsset(id, file);
 
-    // Offload waveform & thumbnail extraction to IngestWorker
+    // Fix #13: pass actual File — worker cannot access parent memory
     if (this.worker) {
       this.worker.postMessage({
         type: "EXTRACT_WAVEFORM_AND_THUMB",
         fileId: id,
+        file,
         duration: baseAsset.duration,
       });
     } else {
@@ -157,5 +158,6 @@ export class MediaIngestManager {
     this.worker?.terminate();
     this.worker = null;
     this.onAssetIngestedCallbacks = [];
+    this.initWorker(); // Fix #12: re-init so singleton stays usable after cleanup
   }
 }

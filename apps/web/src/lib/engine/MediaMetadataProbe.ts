@@ -49,7 +49,11 @@ export function probeMediaMetadata(file: File): Promise<MediaMetadata> {
         width: videoEl.videoWidth || 1920,
         height: videoEl.videoHeight || 1080,
         hasVideo: videoEl.videoWidth > 0,
-        hasAudio: true,
+        // Fix #5: real audio detection — not hardcoded true
+        hasAudio: (videoEl as any).mozHasAudio
+          ?? (typeof (videoEl as any).webkitAudioDecodedByteCount !== "undefined"
+              ? (videoEl as any).webkitAudioDecodedByteCount > 0
+              : file.type.startsWith("audio") || file.name.match(/\.(mp4|mov|mkv|webm)$/i) !== null),
       };
       URL.revokeObjectURL(url);
       videoEl.remove();

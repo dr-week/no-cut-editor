@@ -109,9 +109,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   ],
 
   // --- Transport Actions ---
+  // Fix #9: sync isPlaying reactively from engine truth, not as a stale copy
   togglePlay: () => {
     const engine = EditorEngine.getInstance();
     engine.togglePlay();
+    // isPlaying updated reactively via subscribePlayState wired in StageViewport/TransportControls
     set({ isPlaying: engine.isPlaying });
   },
   setPlaying: (isPlaying: boolean) => {
@@ -241,10 +243,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const previousClips = [...clips];
     const cutEnd = clipToDelete.startTime + clipToDelete.duration;
 
-    // Ripple shift clips after the deleted clip
+    // Ripple shift clips after the deleted clip — Fix #10: skip locked tracks
     const updatedClips = clips
       .filter((c) => c.id !== selectedClipId)
       .map((c) => {
+        if ((c as any).locked) return c; // Fix #10: respect track lock
         if (c.startTime >= cutEnd) {
           return { ...c, startTime: Number((c.startTime - clipToDelete.duration).toFixed(3)) };
         }

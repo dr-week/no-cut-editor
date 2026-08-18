@@ -58,6 +58,8 @@ export class FFmpegProxyEngine {
     const inputName = `input_${Date.now()}.mp4`;
     const outputName = `proxy_720p_${Date.now()}.mp4`;
 
+    // Fix #2: off() before on() — prevents listener stacking across calls
+    this.ffmpeg.off("progress");
     this.ffmpeg.on("progress", ({ progress }) => {
       onProgress?.(Math.round(progress * 100));
     });
@@ -78,15 +80,13 @@ export class FFmpegProxyEngine {
     const proxyBlob = new Blob([data], { type: "video/mp4" });
     const proxyUrl = URL.createObjectURL(proxyBlob);
 
+    // Fix #3: always clean up WASM MEMFS to prevent heap OOM
     await this.ffmpeg.deleteFile(inputName);
     await this.ffmpeg.deleteFile(outputName);
 
     return { proxyUrl, proxyBlob, width: 1280, height: 720 };
   }
 
-  /**
-   * Exports the final rendered video from a sequence of frame blobs.
-   */
   public async exportVideo(
     frameBlobs: Blob[],
     fps = 30,
@@ -98,6 +98,8 @@ export class FFmpegProxyEngine {
       await this.ffmpeg.writeFile(`frame_${String(i).padStart(5, "0")}.png`, await fetchFile(frameBlobs[i]));
     }
 
+    // Fix #2: off() before on()
+    this.ffmpeg.off("progress");
     this.ffmpeg.on("progress", ({ progress }) => onProgress?.(Math.round(progress * 100)));
 
     await this.ffmpeg.exec([
@@ -109,6 +111,13 @@ export class FFmpegProxyEngine {
     ]);
 
     const data = await this.ffmpeg.readFile("output.mp4");
+
+    // Fix #3: delete all frame files + output from WASM MEMFS
+    for (let i = 0; i < frameBlobs.length; i++) {
+      await this.ffmpeg.deleteFile(`frame_${String(i).padStart(5, "0")}.png`);
+    }
+    await this.ffmpeg.deleteFile("output.mp4");
+
     return new Blob([data], { type: "video/mp4" });
   }
 

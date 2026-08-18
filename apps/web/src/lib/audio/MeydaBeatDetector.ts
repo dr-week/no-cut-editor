@@ -37,6 +37,9 @@ export async function analyzeAudioBeats(
     waveform.push(Math.min(100, Math.floor(Math.sqrt(rms / blockSize) * 350)));
   }
 
+  // Fix #7: Meyda requires bufferSize to match frame slice size — else returns null for every frame
+  (Meyda as any).bufferSize = frameSize;
+
   // Extract energy features using Meyda
   const energyFrames: number[] = [];
   for (let offset = 0; offset + frameSize < channelData.length; offset += frameSize) {

@@ -26,21 +26,20 @@ export const SAAS_MOTION_FONTS = [
  * Resolves when fonts are ready to paint on Canvas / Konva.
  */
 export function loadGoogleFonts(families: string[] = SAAS_MOTION_FONTS): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (typeof window === "undefined") {
-      resolve();
-      return;
-    }
+  return new Promise((resolve) => {
+    if (typeof window === "undefined") { resolve(); return; }
+
+    // Fix #11: skip if already loaded (HMR / re-mount guard)
+    const firstFont = families[0] ?? "Inter";
+    if (document.fonts.check(`12px "${firstFont}"`)) { resolve(); return; }
+
+    // Fix #11: 3-second timeout prevents silent hang under CSP
+    const timer = setTimeout(() => { console.warn("WebFontLoader: timeout, using system fonts."); resolve(); }, 3000);
 
     WebFont.load({
-      google: {
-        families: families.map((f) => `${f}:400,600,700,900`),
-      },
-      active: () => resolve(),
-      inactive: () => {
-        console.warn("WebFontLoader: Some fonts failed to load, using fallback.");
-        resolve(); // Don't hard reject — graceful fallback to system fonts
-      },
+      google: { families: families.map((f) => `${f}:400,600,700,900`) },
+      active: () => { clearTimeout(timer); resolve(); },
+      inactive: () => { clearTimeout(timer); console.warn("WebFontLoader: fonts failed, using fallback."); resolve(); },
     });
   });
 }

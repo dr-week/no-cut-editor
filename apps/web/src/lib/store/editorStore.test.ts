@@ -1,4 +1,14 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+
+// Mock Tone.js — jsdom has no real AudioContext
+vi.mock("tone", () => ({
+  start: vi.fn().mockResolvedValue(undefined),
+  getTransport: () => ({ seconds: 0, start: vi.fn(), pause: vi.fn(), stop: vi.fn() }),
+}));
+vi.mock("../audio/ToneAudioEngine", () => ({
+  ToneAudioEngine: { getInstance: () => ({ play: vi.fn(), pause: vi.fn(), seek: vi.fn() }) },
+}));
+
 import { useEditorStore } from "./editorStore";
 import { TimelineCommander } from "../history/TimelineCommander";
 import { EditorEngine } from "../engine/EditorEngine";
