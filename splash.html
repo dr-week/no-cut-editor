@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>OpenCut 2026 - Booting Studio</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif; }
+    body {
+      background: radial-gradient(circle at center, #11141c 0%, #07080a 100%);
+      color: #e2e8f0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      user-select: none;
+    }
+    .splash-container {
+      width: 500px;
+      padding: 32px;
+      background: rgba(18, 20, 26, 0.9);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(6, 182, 212, 0.15);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+    .logo-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .glow-circle {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      background: radial-gradient(circle, #06b6d4 0%, rgba(6, 182, 212, 0) 70%);
+      border-radius: 50%;
+      animation: pulse 2s infinite ease-in-out;
+    }
+    .logo-badge {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, #06b6d4, #3b82f6);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000;
+      font-weight: 900;
+      font-size: 26px;
+      z-index: 2;
+      box-shadow: 0 10px 25px rgba(6, 182, 212, 0.4);
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(90deg, #fff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    p.subtitle {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: -12px;
+      letter-spacing: 0.5px;
+    }
+    .progress-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #06b6d4, #3b82f6, #a855f7);
+      border-radius: 999px;
+      transition: width 0.3s ease;
+      box-shadow: 0 0 12px rgba(6, 182, 212, 0.8);
+    }
+    .terminal-box {
+      width: 100%;
+      background: #090a0d;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      min-height: 52px;
+      justify-content: center;
+      text-align: left;
+    }
+    .cmd-line {
+      color: #94a3b8;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .sarcastic-reply {
+      color: #f59e0b;
+      font-weight: 600;
+    }
+    .status-badge {
+      font-size: 10px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #94a3b8;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #f59e0b;
+    }
+    .status-dot.active {
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+    .error-container {
+      display: none;
+      width: 100%;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      color: #fca5a5;
+      text-align: left;
+    }
+    .btn-retry {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 4px 10px;
+      background: #ef4444;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.4; }
+      50% { transform: scale(1.4); opacity: 0.8; }
+    }
+  </style>
+</head>
+<body>
+  <div class="splash-container">
+    <div class="logo-container">
+      <div class="glow-circle"></div>
+      <div class="logo-badge">⚡</div>
+    </div>
+    
+    <div>
+      <h1>OPENCUT STUDIO 2026</h1>
+      <p class="subtitle">PREMIERE POWER • CAPCUT EASE • ZERO BS</p>
+    </div>
+
+    <div class="status-badge" id="statusBadge">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Checking dev server status (localhost:5173)...</span>
+    </div>
+
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progress"></div>
+    </div>
+
+    <div class="terminal-box">
+      <div class="cmd-line" id="cmd">▸ [boot] Initializing quantum coffee pot...</div>
+      <div class="sarcastic-reply" id="reply">"Hold tight, pretending to do complex math..."</div>
+    </div>
+
+    <div class="error-container" id="errorBox">
+      <div>⚠️ <strong>Server Timeout:</strong> Port 5173 did not respond in time.</div>
+      <a href="http://localhost:5173" target="_blank" class="btn-retry">Open localhost:5173 Directly</a>
+    </div>
+  </div>
+
+  <script>
+    const steps = [
+      { pct: 20, cmd: "▸ [wasm] Loading WebCodecs & Wagner GLSL shaders...", reply: '"Compiling pixels so shiny you will forget you have deadlines."' },
+      { pct: 40, cmd: "▸ [ai] Waking up Whisper.cpp speech models...", reply: '"Listening closely to verify if you said cut or cat."' },
+      { pct: 60, cmd: "▸ [dsp] Calibrating Tone.js 3-Band Parametric EQ...", reply: '"Boosting 808 sub-bass until your neighbor files a complaint."' },
+      { pct: 80, cmd: "▸ [engine] Initializing Remotion & Canva Transformer...", reply: '"Dragging bounding boxes so you feel like a graphic designer."' },
+      { pct: 95, cmd: "▸ [healthcheck] Pinging http://localhost:5173 loop...", reply: '"Waiting for Vite dev server to wake up from its nap..."' }
+    ];
+
+    let current = 0;
+    const progressEl = document.getElementById("progress");
+    const cmdEl = document.getElementById("cmd");
+    const replyEl = document.getElementById("reply");
+    const statusTextEl = document.getElementById("statusText");
+    const statusDotEl = document.getElementById("statusDot");
+    const errorBoxEl = document.getElementById("errorBox");
+
+    function runAnimation() {
+      if (current < steps.length) {
+        const item = steps[current];
+        progressEl.style.width = item.pct + "%";
+        cmdEl.innerText = item.cmd;
+        replyEl.innerText = item.reply;
+        current++;
+        setTimeout(runAnimation, 400);
+      } else {
+        pollHealthCheck(0);
+      }
+    }
+
+    // Health-Check Feedback Loop
+    function pollHealthCheck(attempts) {
+      if (attempts > 30) {
+        statusTextEl.innerText = "Server failed to respond.";
+        statusDotEl.style.background = "#ef4444";
+        errorBoxEl.style.display = "block";
+        return;
+      }
+
+      fetch("http://localhost:5173", { mode: 'no-cors' })
+        .then(() => {
+          progressEl.style.width = "100%";
+          statusDotEl.classList.add("active");
+          statusTextEl.innerText = "Server Online! Redirecting to Studio...";
+          cmdEl.innerText = "▸ [connected] Handshake verified with OpenCut Studio!";
+          replyEl.innerText = '"Redirecting now... Prepare to cut some heat."';
+          
+          setTimeout(() => {
+            window.location.href = "http://localhost:5173";
+          }, 500);
+        })
+        .catch(() => {
+          statusTextEl.innerText = `Waiting for server on port 5173 (Attempt ${attempts + 1}/30)...`;
+          setTimeout(() => pollHealthCheck(attempts + 1), 600);
+        });
+    }
+
+    setTimeout(runAnimation, 200);
+  </script>
+</body>
+</html>
