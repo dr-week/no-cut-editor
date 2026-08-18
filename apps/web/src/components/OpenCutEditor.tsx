@@ -25,6 +25,7 @@ import { TimelineToolbar } from "./editor/timeline/TimelineToolbar";
 import { TrackHeaders } from "./editor/timeline/TrackHeaders";
 import { SequenceCanvas } from "./editor/timeline/SequenceCanvas";
 import { useEditorStore } from "#/lib/store/editorStore";
+import { preloadSaaSFonts } from "#/lib/canvas/CanvasFontLoader";
 
 export function OpenCutEditor() {
   const [aspectRatio, setAspectRatio] = useState<"16:9" | "9:16" | "1:1">("16:9");
@@ -33,6 +34,11 @@ export function OpenCutEditor() {
 
   const togglePlay = useEditorStore((s) => s.togglePlay);
   const splitClip = useEditorStore((s) => s.splitClip);
+
+  // Preload Google SaaS Motion Fonts on editor mount
+  useEffect(() => {
+    preloadSaaSFonts().catch(console.warn);
+  }, []);
   const rippleDelete = useEditorStore((s) => s.rippleDelete);
   const triggerNotice = useEditorStore((s) => s.triggerNotice);
 

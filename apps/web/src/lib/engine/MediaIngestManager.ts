@@ -7,6 +7,7 @@
  */
 
 import { AssetCacheManager } from "./AssetCacheManager";
+import { probeMediaMetadata } from "./MediaMetadataProbe";
 
 export interface IngestedMediaAsset {
   id: string;
@@ -68,12 +69,23 @@ export class MediaIngestManager {
       ? "audio"
       : "image";
 
+    // Probe real video/audio metadata (duration, resolution, codec) via mp4box.js
+    let probedDuration = 30;
+    if (typeof window !== "undefined" && (type === "video" || type === "audio")) {
+      try {
+        const meta = await probeMediaMetadata(file);
+        probedDuration = meta.duration;
+      } catch {
+        probedDuration = 30;
+      }
+    }
+
     const baseAsset: IngestedMediaAsset = {
       id,
       name: file.name,
       type,
       url,
-      duration: 30, // Default duration placeholder until probed
+      duration: probedDuration,
       size: file.size,
     };
 
